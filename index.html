@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Banner Interattivo</title>
+  <style>
+    :root{
+      --banner-h: 72px;
+      --input-h: 92px;
+      --bg: #0b0b0b;
+      --fg: #fff;
+      --muted: #9aa0a6;
+      --accent: #8b5cf6;
+      --speed: 140; /* px/s */
+    }
+    *{ box-sizing: border-box; }
+    html, body { height: 100%; }
+    body{
+      margin:0; background:var(--bg); color:var(--fg);
+      font: 16px/1.4 system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial;
+      padding-top: var(--banner-h);
+      padding-bottom: var(--input-h);
+      min-height: 100dvh;
+    }
+
+    /* Banner top */
+    .banner{
+      position: fixed; inset: 0 0 auto 0; height: var(--banner-h);
+      z-index: 9999; background: rgba(0,0,0,0.92);
+      border-bottom: 1px solid rgba(255,255,255,0.12);
+      overflow: hidden;
+    }
+    .banner__inner{
+      position: relative; display: flex; height: 100%;
+      width: max-content;
+    }
+    .track{
+      display:flex; align-items:center; height:100%; white-space:nowrap;
+      animation: scroll var(--duration, 25s) linear infinite;
+    }
+    .pill{
+      display:inline-flex; align-items:center; justify-content:center;
+      margin: 0 10px; padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
+      color: #fff; font-weight: 600; letter-spacing: 0.02em;
+    }
+    .infoBar{
+      position:absolute; right: 10px; top: 6px; font-size:12px; color:var(--muted);
+      text-shadow: 0 1px 0 rgba(0,0,0,0.5);
+    }
+    @keyframes scroll { from { transform: translateX(0); } to { transform: translateX(-100%); } }
+    @media (prefers-reduced-motion: reduce){ .track{ animation: none; } }
+
+    /* Input bottom */
+    .inputBar{
+      position: fixed; inset: auto 0 0 0; height: var(--input-h);
+      z-index: 9999; background: rgba(0,0,0,0.9);
+      border-top: 1px solid rgba(255,255,255,0.12);
+      display: flex; align-items: center; padding: 12px 14px;
+      gap: 10px;
+    }
+    form{ display:flex; gap:8px; width:100%; }
+    input[type="text"]{
+      flex:1; padding: 14px 16px; border-radius: 12px;
+      border:1px solid rgba(255,255,255,0.18);
+      background: rgba(255,255,255,0.06); color:#fff; outline:none;
+    }
+    input::placeholder{ color:#bbb; }
+    button{
+      padding: 14px 16px; border-radius: 12px; cursor: pointer;
+      border:1px solid rgba(255,255,255,0.35);
+      background: transparent; color:#fff; font-weight:600;
+    }
+    .hint{ font-size:12px; color:var(--muted); }
+
+    main{ padding: 24px; color:#cfd5db; }
+    a { color: var(--accent); }
+  </style>
+  <!--
+    REQUISITI SUPABASE (da creare prima):
+    create table public.words (
+      id bigserial primary key,
+      word text not null check (char_length(word) between 1 and 50 and word !~* '(https?://|www\\.)'),
+      device_id uuid not null,
+      created_at timestamptz not null default now()
+    );
+    alter table public.words enable row level security;
+    create policy "public read" on public.words for select using (true);
+    create policy "public insert" on public.words for insert with check (true);
+
+    (Opzionale ma consigliato) Trigger per rate-limit per device_id, come da SQL che ti ho passato.
+  -->
+</head>
+<body>
+
+  <div class="banner" aria-hidden="true">
+    <div class="banner__inner" id="bannerInner"></div>
+    <div class="infoBar">Parole: <span id="count">0</span> • Ultimo update: <span id="lastUpdate">—</span></div>
+  </div>
+
+  <main>
+    <h1>Installazione — Banner Interattivo</h1>
+    <p>Il banner in alto scorre le parole inviate dagli utenti. La lista si aggiorna ogni 30s.</p>
+  </main>
+
+  <div class="inputBar">
+    <form id="wordForm" autocomplete="off">
+      <input id="wordInput" type="text" maxlength="70" placeholder="Scrivi parole (separa con virgola) e premi Invio" />
+      <button type="submit">Invia</button>
+    </form>
+    <div class="hint" id="hint"></div>
+  </div>
+
+  <!-- Supabase SDK -->
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <script>
+    // === CONFIGURA QUI ===
+    const SUPABASE_URL = 'https://jndommppkmwrrpmxhfzu.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpuZG9tbXBwa213cnJwbXhoZnp1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI3Njg2MDAsImV4cCI6MjA3ODM0NDYwMH0.pwhNlDTgvRWWkmWaSesmN0iBlEzJ6BJEaFyE3NsKP2A';
+    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // === PARAMS ===
+    const REFRESH_MS = 30000;      // aggiorna ogni 30s
+    const MAX_FETCH = 500;         // mostra max 500 parole (in ordine cronologico)
+    const MAX_PER_SUBMIT = 5;      // massimo parole per invio
+    const COOLDOWN_MS = 4000;      // anti-spam client (aggiunta soft al trigger server)
+    const SPEED_PX_S = 140;        // velocità scorrimento
+    const BLOCKLIST = [];          // opzionale: ['parola1','parola2',...]
+
+    // === DOM ===
+    const bannerInner = document.getElementById('bannerInner');
+    const countEl = document.getElementById('count');
+    const lastUpdateEl = document.getElementById('lastUpdate');
+    const form = document.getElementById('wordForm');
+    const input = document.getElementById('wordInput');
+    const hint = document.getElementById('hint');
+
+    // === DEVICE ID persistente ===
+    function getDeviceId(){
+      try {
+        let id = localStorage.getItem('device_id');
+        if (!id) { id = (crypto.randomUUID ? crypto.randomUUID() : ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g,c=>(c^crypto.getRandomValues(new Uint8Array(1))[0]&15>>c/4).toString(16))); localStorage.setItem('device_id', id); }
+        return id;
+      } catch {
+        // fallback volatile
+        return '00000000-0000-4000-8000-' + Math.random().toString(16).slice(2, 14);
+      }
+    }
+    const DEVICE_ID = getDeviceId();
+
+    // === UTILS ===
+    let lastSubmitAt = 0;
+    const escapeMap = { '<':'&lt;', '>':'&gt;', '&':'&amp;', '"':'&quot;' };
+    const sanitize = s => s.replace(/[<>"&]/g, ch => escapeMap[ch]);
+    const isLink = s => /(https?:\/\/|www\.)/i.test(s);
+    const tokenize = raw => raw
+      .split(/[,;\n]+/)
+      .map(s => s.trim())
+      .filter(Boolean)
+      .map(s => s.slice(0, 50)); // max 50 (coerente col check DB)
+
+    // === DATA CACHE ===
+    let wordsCache = []; // [{word, created_at}]
+
+    async function fetchWordsRemote(){
+      const { data, error } = await sb
+        .from('words')
+        .select('word, created_at')
+        .order('created_at', { ascending: true })
+        .limit(MAX_FETCH);
+
+      if (error) {
+        console.warn('Fetch error:', error.message);
+        hint.textContent = 'Problema di connessione, riprovo...';
+        return;
+      }
+      hint.textContent = '';
+      wordsCache = data || [];
+      buildBanner();
+    }
+
+    async function insertWordsRemote(tokens){
+      if (!tokens.length) return;
+
+      // sanitizza e filtra
+      let clean = tokens
+        .map(t => sanitize(t))
+        .filter(Boolean)
+        .filter(w => !isLink(w))
+        .filter(w => !BLOCKLIST.includes(w.toLowerCase()))
+        .slice(0, MAX_PER_SUBMIT);
+
+      if (!clean.length) return;
+
+      const now = Date.now();
+      if (now - lastSubmitAt < COOLDOWN_MS) {
+        hint.textContent = 'Aspetta un attimo prima di inviare di nuovo 🙂';
+        return;
+      }
+      lastSubmitAt = now;
+
+      const payload = clean.map(w => ({ word: w, device_id: DEVICE_ID }));
+      const { error } = await sb.from('words').insert(payload);
+      if (error) {
+        console.error('Insert error:', error.message);
+        hint.textContent = error.message || 'Errore inserimento';
+        return;
+      }
+
+      // Aggiorna subito la UI (ottimistica) e il polling riallinea
+      const nowIso = new Date().toISOString();
+      clean.forEach(w => wordsCache.push({ word: w, created_at: nowIso }));
+      buildBanner();
+      hint.textContent = 'Inviato!';
+      setTimeout(() => { hint.textContent = ''; }, 1200);
+    }
+
+    function buildBanner(){
+      const words = wordsCache.map(x => x.word);
+      bannerInner.innerHTML = '';
+
+      const track1 = document.createElement('div');
+      track1.className = 'track';
+
+      if (words.length === 0) {
+        const span = document.createElement('span');
+        span.className = 'pill';
+        span.textContent = 'Scrivi qui sotto e apparirai nel banner';
+        track1.appendChild(span);
+      } else {
+        words.forEach(w => {
+          const span = document.createElement('span');
+          span.className = 'pill';
+          span.textContent = w;
+          track1.appendChild(span);
+        });
+      }
+
+      const track2 = track1.cloneNode(true);
+      bannerInner.appendChild(track1);
+      bannerInner.appendChild(track2);
+
+      // durata in base alla larghezza
+      requestAnimationFrame(() => {
+        const width = track1.scrollWidth || 1000;
+        const duration = Math.max(10, width / SPEED_PX_S);
+        bannerInner.style.setProperty('--duration', duration + 's');
+      });
+
+      countEl.textContent = words.length;
+      lastUpdateEl.textContent = new Date().toLocaleTimeString();
+    }
+
+    // Init
+    document.addEventListener('DOMContentLoaded', async () => {
+      input.focus();
+      await fetchWordsRemote();
+      setInterval(fetchWordsRemote, REFRESH_MS);
+
+      // (Opzionale) realtime istantaneo — scommenta per attivare
+      // const channel = sb.channel('realtime:words');
+      // channel.on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'words' }, payload => {
+      //   const r = payload.new;
+      //   wordsCache.push({ word: r.word, created_at: r.created_at });
+      //   buildBanner();
+      // });
+      // channel.subscribe();
+    });
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const raw = input.value.trim();
+      if (!raw) return;
+      const tokens = tokenize(raw);
+      input.value = '';
+      await insertWordsRemote(tokens);
+    });
+
+    // Aggiorna quando torni visibile (es. dopo cambio tab)
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) fetchWordsRemote();
+    });
+  </script>
+</body>
+</html>
