@@ -3,11 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Un Futuro è Possibile</title>
-
-  <!-- Bebas Neue (Light/Book/Regular/Bold) -->
-  <link rel="preconnect" href="https://fonts.cdnfonts.com" crossorigin>
-  <link href="https://fonts.cdnfonts.com/css/bebas-neue" rel="stylesheet">
+  <title>Banner — Colonne + Scroll + Bebas stabile</title>
 
   <style>
     :root{
@@ -15,52 +11,87 @@
       --bg: #8b00a3;                              /* sfondo */
       --fg: #ffffff;                              /* testo banner */
       --muted: #f1d9f6;                           /* testo hint */
-      --col-gap: 28px;                            /* spazio tra colonne */
-      --col-width: clamp(260px, 30vw, 480px);     /* larghezza colonna */
+      --col-gap: 28px;                            /* spazio orizzontale tra colonne */
+      --col-width: clamp(240px, 34vw, 520px);     /* larghezza colonna target */
       --fs: clamp(56px, 10vh, 160px);             /* dimensione testo banner */
       --row-gap: 14px;                            /* spazio verticale tra righe */
     }
 
+    /* === SELF-HOSTED BEBAS NEUE (un'unica famiglia con pesi diversi) === */
+    @font-face{
+      font-family: "BebasNeue";
+      src: url("./fonts/BebasNeue-Light.woff") format("woff");
+      font-weight: 300; font-style: normal; font-display: swap;
+    }
+    @font-face{
+      font-family: "BebasNeue";
+      src: url("./fonts/BebasNeue-Book.woff") format("woff");
+      font-weight: 400; font-style: normal; font-display: swap;
+    }
+    @font-face{
+      font-family: "BebasNeue";
+      src: url("./fonts/BebasNeue-Regular.woff") format("woff");
+      font-weight: 500; font-style: normal; font-display: swap;
+    }
+    @font-face{
+      font-family: "BebasNeue";
+      src: url("./fonts/BebasNeue-Bold.woff") format("woff");
+      font-weight: 700; font-style: normal; font-display: swap;
+    }
+
     * { box-sizing: border-box; }
     html, body { height: 100%; }
-
     body{
       margin: 0;
       background: var(--bg);
       color: var(--fg);
-      font-family: system-ui, "Helvetica Neue", Helvetica, Roboto, "Segoe UI", sans-serif; /* solo per l'UI sotto */
+      /* UI fuori dal banner: puoi lasciare system */
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Helvetica, sans-serif;
       min-height: 100dvh;
+      overflow: hidden; /* scroll solo nel banner */
     }
 
-    /* Banner: fino sopra l’input */
+    /* Banner fino sopra l’input, con scroller proprio */
     .banner{
       position: fixed;
       inset: 0 0 auto 0;
       height: calc(100dvh - var(--input-h) - env(safe-area-inset-bottom, 0px));
       z-index: 10;
       background: var(--bg);
-      overflow: hidden;
+      border: 0;
+      display: grid;
+      grid-template-rows: 1fr;
     }
+    .scroller{
+      height: 100%;
+      overflow: auto;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255,255,255,.35) transparent;
+    }
+    .scroller::-webkit-scrollbar{ width: 10px; }
+    .scroller::-webkit-scrollbar-thumb{ background: rgba(255,255,255,.35); border-radius: 8px; }
+    .scroller::-webkit-scrollbar-track{ background: transparent; }
 
-    /* SOLO Bebas nel banner (niente altri fallback) */
-    .banner,
-    .banner *{
-      font-family: "Bebas Neue", "Bebas Neue Book", "Bebas Neue Light", "Bebas Neue Bold" !important;
+    /* SOLO Bebas dentro al banner */
+    .banner, .banner *{
+      font-family: "BebasNeue" !important;
       font-synthesis: none;
     }
 
     /* Colonne: riempi dall'alto in basso, poi a destra */
     .banner__inner{
-      height: 100%;
+      min-height: 100%;
       padding: 16px 16px;
       column-width: var(--col-width);
       column-gap: var(--col-gap);
       column-fill: auto;
-      opacity: 0;                          /* evita flash di fallback */
+      opacity: 0; /* evitiamo flash finché i font non sono pronti */
       transition: opacity .2s ease;
     }
 
-    /* Ogni stringa = blocco orizzontale */
+    /* Ogni stringa = blocco orizzontale (riga) */
     .block{
       display: block;
       break-inside: avoid;
@@ -69,10 +100,11 @@
       font-size: var(--fs);
       line-height: 1;
       letter-spacing: 0.01em;
-      white-space: pre-wrap;                /* preserva spazi multipli */
-      word-break: break-word;               /* va a capo solo se troppo lunga */
+      white-space: pre-wrap;   /* preserva spazi multipli */
+      word-break: break-word;  /* va a capo solo se troppo lunga */
       text-align: left;
       overflow: hidden;
+      /* il peso (300/400/500/700) lo assegna JS per ogni frase */
     }
 
     /* Input in basso (UI) */
@@ -112,13 +144,24 @@
       font-size: 16px;
     }
     .hint{ font-size:12px; color: var(--muted); min-width: 140px; text-align: right; }
+
+    @media (max-width: 600px){
+      :root{
+        --col-width: min(86vw, 520px);
+        --col-gap: 18px;
+        --row-gap: 10px;
+        --fs: clamp(44px, 9.5vh, 120px);
+      }
+    }
   </style>
 </head>
 <body>
 
   <!-- BANNER -->
   <div class="banner" aria-hidden="true">
-    <div class="banner__inner" id="bannerGrid"></div>
+    <div class="scroller">
+      <div class="banner__inner" id="bannerGrid"></div>
+    </div>
   </div>
 
   <!-- INPUT -->
@@ -140,8 +183,8 @@
 
     // === PARAMS ===
     const REFRESH_MS = 30000;
-    const MAX_FETCH = 800;
-    const MAX_DISPLAY = 500;
+    const MAX_FETCH = 1200;
+    const MAX_DISPLAY = 1200;
     const MAX_PER_SUBMIT = 5;
     const COOLDOWN_MS = 4000;
     const DB_MAX = 50;     // limite DB
@@ -177,32 +220,23 @@
     const sanitize = s => s.replace(/[<>"&]/g, ch => escapeMap[ch]);
     const isLink = s => /(https?:\/\/|www\.)/i.test(s);
 
-    // Split solo per virgola/newline, preserva spazi interni ed esterni
+    // Split per virgola/newline, preserva spazi interni ed esterni
     const tokenize = raw => raw
       .split(/(?:,|\n)+/)
-      .map(s => s) // niente trim
+      .map(s => s)
       .filter(s => s.replace(/\s/g,'').length > 0);
 
-    // Aggiungi uno spazio finale (senza superare limite DB)
+    // Spazio finale (senza superare limite DB)
     function ensureTrailingSpace(w){
       if (w.endsWith(' ')) return w.slice(0, DB_MAX);
       if (w.length < DB_MAX) return w + ' ';
       return w.slice(0, DB_MAX - 1) + ' ';
     }
 
-    // Varianti reali disponibili nel CSS di cdnfonts:
-    // - "Bebas Neue Light"
-    // - "Bebas Neue Book"
-    // - "Bebas Neue"        (Regular)
-    // - "Bebas Neue Bold"
-    const BEBAS_FAMILIES = [
-      '"Bebas Neue Light"',
-      '"Bebas Neue Book"',
-      '"Bebas Neue"',
-      '"Bebas Neue Bold"',
-    ];
+    // Pesi disponibili (matchano gli @font-face)
+    const WEIGHTS = [300, 400, 500, 700];
 
-    // Hash FNV-1a per scelta STABILE della variante
+    // Hash FNV-1a per scelta STABILE in base all'id (fallback al testo)
     function fnv1a(str){
       let h = 0x811c9dc5;
       for (let i = 0; i < str.length; i++){
@@ -211,18 +245,19 @@
       }
       return h >>> 0;
     }
-    function pickFamilyFor(text){
-      const idx = fnv1a(text) % BEBAS_FAMILIES.length;
-      return BEBAS_FAMILIES[idx];
+    function pickWeightForItem(item){
+      const key = (item.id != null) ? String(item.id) : item.word;
+      const idx = fnv1a(key) % WEIGHTS.length;
+      return WEIGHTS[idx];
     }
 
     // === DATA ===
-    let wordsCache = []; // [{word, created_at}]
+    let wordsCache = []; // [{id, word, created_at}]
 
     async function fetchWordsRemote(){
       const { data, error } = await sb
         .from('words')
-        .select('word, created_at')
+        .select('id, word, created_at')
         .order('created_at', { ascending: false })
         .limit(MAX_FETCH);
 
@@ -256,47 +291,43 @@
       lastSubmitAt = now;
 
       const payload = clean.map(w => ({ word: w, device_id: DEVICE_ID }));
-      const { error } = await sb.from('words').insert(payload);
+      const { data, error } = await sb.from('words').insert(payload).select('id, word, created_at');
       if (error) {
         console.error('Insert error:', error.message);
         hint.textContent = error.message || 'Errore inserimento';
         return;
       }
 
-      // UI ottimistica
-      const nowIso = new Date().toISOString();
-      clean.forEach(w => wordsCache.unshift({ word: w, created_at: nowIso }));
+      // UI ottimistica con i record reali (così abbiamo id e peso stabile)
+      (data || []).forEach(r => wordsCache.unshift(r));
       buildWall();
       hint.textContent = 'Inviato!';
       setTimeout(() => { hint.textContent = ''; }, 1200);
     }
 
-    function makeBlock(text){
-      const block = document.createElement('div');
-      block.className = 'block';
-      block.style.fontFamily = pickFamilyFor(text); // variante Bebas STABILE
-      block.textContent = text;                     // stringa orizzontale
-      return block;
+    function makeBlock(item){
+      const el = document.createElement('div');
+      el.className = 'block';
+      el.style.fontWeight = pickWeightForItem(item); // 300/400/500/700 stabile
+      el.textContent = item.word;                    // stringa intera orizzontale
+      return el;
     }
 
     function buildWall(){
       grid.innerHTML = '';
-      const items = wordsCache.slice(0, MAX_DISPLAY).map(x => x.word);
+      const items = wordsCache.slice(0, MAX_DISPLAY);
 
       if (items.length === 0){
-        grid.appendChild(makeBlock('Scrivi qui sotto ')); // con spazio finale
+        grid.appendChild(makeBlock({ id: 0, word: 'Scrivi qui sotto ' }));
       } else {
-        for (const txt of items){
-          grid.appendChild(makeBlock(txt));
+        for (const it of items){
+          grid.appendChild(makeBlock(it));
         }
       }
 
-      // mostra il banner solo quando i Bebas sono pronti (niente fallback)
-      if (document.fonts && document.fonts.ready) {
-        document.fonts.ready.then(() => { grid.style.opacity = '1'; });
-      } else {
-        setTimeout(() => { grid.style.opacity = '1'; }, 800);
-      }
+      // Mostra solo quando i pesi di BebasNeue sono pronti
+      const waits = [300,400,500,700].map(w => document.fonts.load(`${w} 1rem "BebasNeue"`));
+      Promise.all(waits).then(() => { grid.style.opacity = '1'; });
     }
 
     // Init
@@ -309,7 +340,7 @@
       // const channel = sb.channel('realtime:words');
       // channel.on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'words' }, payload => {
       //   const r = payload.new;
-      //   wordsCache.unshift({ word: r.word, created_at: r.created_at });
+      //   wordsCache.unshift({ id: r.id, word: r.word, created_at: r.created_at });
       //   buildWall();
       // });
       // channel.subscribe();
