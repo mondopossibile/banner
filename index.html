@@ -7,16 +7,13 @@
 
   <style>
     :root{
-      --input-h: 100px;
-      --bg: #8b00a3;
-      --fg: #ffffff;
-      --muted: #f1d9f6;
-      --col-gap: 28px;                            /* spazio orizzontale tra colonne */
-      --col-width-min: 240;                       /* px — usati in JS per calcolare quante colonne */
-      --col-width-ideal-vw: 34;                   /* % della viewport width */
-      --col-width-max: 520;                       /* px */
-      --fs: clamp(56px, 10vh, 160px);
-      --row-gap: 14px;
+      --input-h: 100px;   /* altezza barra input */
+      --bg: #8b00a3;      /* sfondo */
+      --fg: #ffffff;      /* testo banner */
+      --muted: #f1d9f6;   /* testo hint */
+      --col-gap: 28px;    /* spazio orizzontale tra colonne */
+      --fs: clamp(56px, 10vh, 160px); /* dimensione testo banner */
+      --row-gap: 14px;    /* spazio verticale tra righe */
     }
 
     /* SELF-HOSTED BEBAS NEUE */
@@ -31,12 +28,12 @@
       margin: 0;
       background: var(--bg);
       color: var(--fg);
-      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Helvetica, sans-serif;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Helvetica, sans-serif; /* solo UI */
       min-height: 100dvh;
       overflow: hidden; /* scroll solo nel banner */
     }
 
-    /* Banner + scroller */
+    /* Banner */
     .banner{
       position: fixed;
       inset: 0 0 auto 0;
@@ -47,32 +44,38 @@
       display: grid;
       grid-template-rows: 1fr;
     }
-    .scroller{
-      height: 100%;
-      overflow: auto;                /* scroll verticale */
-      -webkit-overflow-scrolling: touch;
-      overscroll-behavior: contain;
-      scrollbar-width: thin;
-      scrollbar-color: rgba(255,255,255,.35) transparent;
-    }
-    .scroller::-webkit-scrollbar{ width: 10px; }
-    .scroller::-webkit-scrollbar-thumb{ background: rgba(255,255,255,.35); border-radius: 8px; }
-    .scroller::-webkit-scrollbar-track{ background: transparent; }
 
-    /* SOLO Bebas nel banner */
+    /* SOLO Bebas dentro al banner */
     .banner, .banner *{
       font-family: "BebasNeue" !important;
       font-synthesis: none;
     }
 
-    /* Colonne: ora gestite da column-count impostato via JS */
+    /* Colonne + scroll direttamente sull'inner */
     .banner__inner{
+      height: 100%;
       padding: 16px 16px;
       column-gap: var(--col-gap);
       column-fill: auto;
-      opacity: 0;                    /* evitiamo flash finché i font non sono pronti */
+      /* 3 colonne desktop */
+      column-count: 3;
+      -webkit-column-count: 3;
+      -moz-column-count: 3;
+
+      overflow-y: auto;               /* scroll verticale del banner */
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+
+      /* scrollbar styling */
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255,255,255,.35) transparent;
+
+      opacity: 0;                     /* evita flash finché i font non sono pronti */
       transition: opacity .2s ease;
     }
+    .banner__inner::-webkit-scrollbar{ width: 10px; }
+    .banner__inner::-webkit-scrollbar-thumb{ background: rgba(255,255,255,.35); border-radius: 8px; }
+    .banner__inner::-webkit-scrollbar-track{ background: transparent; }
 
     /* Ogni stringa = riga */
     .block{
@@ -83,8 +86,8 @@
       font-size: var(--fs);
       line-height: 1;
       letter-spacing: 0.01em;
-      white-space: pre-wrap;
-      word-break: break-word;
+      white-space: pre-wrap;   /* preserva spazi multipli */
+      word-break: break-word;  /* va a capo solo se troppo lunga */
       text-align: left;
       overflow: hidden;
     }
@@ -127,11 +130,17 @@
     }
     .hint{ font-size:12px; color: var(--muted); min-width: 140px; text-align: right; }
 
+    /* Mobile: 1 colonna scrollabile */
     @media (max-width: 600px){
       :root{
         --col-gap: 18px;
         --row-gap: 10px;
         --fs: clamp(44px, 9.5vh, 120px);
+      }
+      .banner__inner{
+        column-count: 1;
+        -webkit-column-count: 1;
+        -moz-column-count: 1;
       }
     }
   </style>
@@ -140,9 +149,7 @@
 
   <!-- BANNER -->
   <div class="banner" aria-hidden="true">
-    <div class="scroller">
-      <div class="banner__inner" id="bannerGrid"></div>
-    </div>
+    <div class="banner__inner" id="bannerGrid"></div>
   </div>
 
   <!-- INPUT -->
@@ -229,19 +236,6 @@
       return WEIGHTS[idx];
     }
 
-    // Calcola quante colonne mostrare (vertical scroll)
-    function updateColumns(){
-      const styles = getComputedStyle(document.documentElement);
-      const gap = parseFloat(styles.getPropertyValue('--col-gap')) || 28;
-      const minW = parseFloat(styles.getPropertyValue('--col-width-min')) || 240;
-      const ideal = (parseFloat(styles.getPropertyValue('--col-width-ideal-vw')) || 34) / 100 * window.innerWidth;
-      const maxW = parseFloat(styles.getPropertyValue('--col-width-max')) || 520;
-      const desired = Math.max(minW, Math.min(maxW, ideal)); // clamp( min, 34vw, max )
-      const container = grid.clientWidth;
-      const count = Math.max(1, Math.floor((container + gap) / (desired + gap)));
-      grid.style.columnCount = count;
-    }
-
     // === DATA ===
     let wordsCache = []; // [{id, word, created_at}]
 
@@ -289,7 +283,6 @@
         return;
       }
 
-      // UI ottimistica con i record reali (abbiamo id → peso stabile)
       (data || []).forEach(r => wordsCache.unshift(r));
       buildWall();
       hint.textContent = 'Inviato!';
@@ -316,10 +309,7 @@
         }
       }
 
-      // calcola quante colonne mostrare
-      updateColumns();
-
-      // mostra solo quando i pesi di BebasNeue sono pronti
+      // Mostra solo quando i pesi di BebasNeue sono pronti
       const waits = [300,400,500,700].map(w => document.fonts.load(`${w} 1rem "BebasNeue"`));
       Promise.all(waits).then(() => { grid.style.opacity = '1'; });
     }
@@ -329,12 +319,6 @@
       input.focus();
       await fetchWordsRemote();
       setInterval(fetchWordsRemote, REFRESH_MS);
-
-      // aggiorna colonne su resize/orientamento
-      let t;
-      window.addEventListener('resize', () => {
-        clearTimeout(t); t = setTimeout(updateColumns, 100);
-      });
     });
 
     form.addEventListener('submit', async (e) => {
