@@ -7,37 +7,23 @@
 
   <style>
     :root{
-      --input-h: 100px;                           /* altezza barra input */
-      --bg: #8b00a3;                              /* sfondo */
-      --fg: #ffffff;                              /* testo banner */
-      --muted: #f1d9f6;                           /* testo hint */
+      --input-h: 100px;
+      --bg: #8b00a3;
+      --fg: #ffffff;
+      --muted: #f1d9f6;
       --col-gap: 28px;                            /* spazio orizzontale tra colonne */
-      --col-width: clamp(240px, 34vw, 520px);     /* larghezza colonna target */
-      --fs: clamp(56px, 10vh, 160px);             /* dimensione testo banner */
-      --row-gap: 14px;                            /* spazio verticale tra righe */
+      --col-width-min: 240;                       /* px — usati in JS per calcolare quante colonne */
+      --col-width-ideal-vw: 34;                   /* % della viewport width */
+      --col-width-max: 520;                       /* px */
+      --fs: clamp(56px, 10vh, 160px);
+      --row-gap: 14px;
     }
 
-    /* === SELF-HOSTED BEBAS NEUE (un'unica famiglia con pesi diversi) === */
-    @font-face{
-      font-family: "BebasNeue";
-      src: url("./fonts/BebasNeue-Light.woff") format("woff");
-      font-weight: 300; font-style: normal; font-display: swap;
-    }
-    @font-face{
-      font-family: "BebasNeue";
-      src: url("./fonts/BebasNeue-Book.woff") format("woff");
-      font-weight: 400; font-style: normal; font-display: swap;
-    }
-    @font-face{
-      font-family: "BebasNeue";
-      src: url("./fonts/BebasNeue-Regular.woff") format("woff");
-      font-weight: 500; font-style: normal; font-display: swap;
-    }
-    @font-face{
-      font-family: "BebasNeue";
-      src: url("./fonts/BebasNeue-Bold.woff") format("woff");
-      font-weight: 700; font-style: normal; font-display: swap;
-    }
+    /* SELF-HOSTED BEBAS NEUE */
+    @font-face{ font-family: "BebasNeue"; src: url("./fonts/BebasNeue-Light.woff") format("woff");   font-weight: 300; font-style: normal; font-display: swap; }
+    @font-face{ font-family: "BebasNeue"; src: url("./fonts/BebasNeue-Book.woff") format("woff");    font-weight: 400; font-style: normal; font-display: swap; }
+    @font-face{ font-family: "BebasNeue"; src: url("./fonts/BebasNeue-Regular.woff") format("woff"); font-weight: 500; font-style: normal; font-display: swap; }
+    @font-face{ font-family: "BebasNeue"; src: url("./fonts/BebasNeue-Bold.woff") format("woff");    font-weight: 700; font-style: normal; font-display: swap; }
 
     * { box-sizing: border-box; }
     html, body { height: 100%; }
@@ -45,13 +31,12 @@
       margin: 0;
       background: var(--bg);
       color: var(--fg);
-      /* UI fuori dal banner: puoi lasciare system */
       font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Helvetica, sans-serif;
       min-height: 100dvh;
       overflow: hidden; /* scroll solo nel banner */
     }
 
-    /* Banner fino sopra l’input, con scroller proprio */
+    /* Banner + scroller */
     .banner{
       position: fixed;
       inset: 0 0 auto 0;
@@ -64,7 +49,7 @@
     }
     .scroller{
       height: 100%;
-      overflow: auto;
+      overflow: auto;                /* scroll verticale */
       -webkit-overflow-scrolling: touch;
       overscroll-behavior: contain;
       scrollbar-width: thin;
@@ -74,24 +59,22 @@
     .scroller::-webkit-scrollbar-thumb{ background: rgba(255,255,255,.35); border-radius: 8px; }
     .scroller::-webkit-scrollbar-track{ background: transparent; }
 
-    /* SOLO Bebas dentro al banner */
+    /* SOLO Bebas nel banner */
     .banner, .banner *{
       font-family: "BebasNeue" !important;
       font-synthesis: none;
     }
 
-    /* Colonne: riempi dall'alto in basso, poi a destra */
+    /* Colonne: ora gestite da column-count impostato via JS */
     .banner__inner{
-      min-height: 100%;
       padding: 16px 16px;
-      column-width: var(--col-width);
       column-gap: var(--col-gap);
       column-fill: auto;
-      opacity: 0; /* evitiamo flash finché i font non sono pronti */
+      opacity: 0;                    /* evitiamo flash finché i font non sono pronti */
       transition: opacity .2s ease;
     }
 
-    /* Ogni stringa = blocco orizzontale (riga) */
+    /* Ogni stringa = riga */
     .block{
       display: block;
       break-inside: avoid;
@@ -100,11 +83,10 @@
       font-size: var(--fs);
       line-height: 1;
       letter-spacing: 0.01em;
-      white-space: pre-wrap;   /* preserva spazi multipli */
-      word-break: break-word;  /* va a capo solo se troppo lunga */
+      white-space: pre-wrap;
+      word-break: break-word;
       text-align: left;
       overflow: hidden;
-      /* il peso (300/400/500/700) lo assegna JS per ogni frase */
     }
 
     /* Input in basso (UI) */
@@ -147,7 +129,6 @@
 
     @media (max-width: 600px){
       :root{
-        --col-width: min(86vw, 520px);
         --col-gap: 18px;
         --row-gap: 10px;
         --fs: clamp(44px, 9.5vh, 120px);
@@ -187,7 +168,7 @@
     const MAX_DISPLAY = 1200;
     const MAX_PER_SUBMIT = 5;
     const COOLDOWN_MS = 4000;
-    const DB_MAX = 50;     // limite DB
+    const DB_MAX = 50;
     const BLOCKLIST = [];
 
     // === DOM ===
@@ -233,10 +214,7 @@
       return w.slice(0, DB_MAX - 1) + ' ';
     }
 
-    // Pesi disponibili (matchano gli @font-face)
     const WEIGHTS = [300, 400, 500, 700];
-
-    // Hash FNV-1a per scelta STABILE in base all'id (fallback al testo)
     function fnv1a(str){
       let h = 0x811c9dc5;
       for (let i = 0; i < str.length; i++){
@@ -249,6 +227,19 @@
       const key = (item.id != null) ? String(item.id) : item.word;
       const idx = fnv1a(key) % WEIGHTS.length;
       return WEIGHTS[idx];
+    }
+
+    // Calcola quante colonne mostrare (vertical scroll)
+    function updateColumns(){
+      const styles = getComputedStyle(document.documentElement);
+      const gap = parseFloat(styles.getPropertyValue('--col-gap')) || 28;
+      const minW = parseFloat(styles.getPropertyValue('--col-width-min')) || 240;
+      const ideal = (parseFloat(styles.getPropertyValue('--col-width-ideal-vw')) || 34) / 100 * window.innerWidth;
+      const maxW = parseFloat(styles.getPropertyValue('--col-width-max')) || 520;
+      const desired = Math.max(minW, Math.min(maxW, ideal)); // clamp( min, 34vw, max )
+      const container = grid.clientWidth;
+      const count = Math.max(1, Math.floor((container + gap) / (desired + gap)));
+      grid.style.columnCount = count;
     }
 
     // === DATA ===
@@ -298,7 +289,7 @@
         return;
       }
 
-      // UI ottimistica con i record reali (così abbiamo id e peso stabile)
+      // UI ottimistica con i record reali (abbiamo id → peso stabile)
       (data || []).forEach(r => wordsCache.unshift(r));
       buildWall();
       hint.textContent = 'Inviato!';
@@ -309,7 +300,7 @@
       const el = document.createElement('div');
       el.className = 'block';
       el.style.fontWeight = pickWeightForItem(item); // 300/400/500/700 stabile
-      el.textContent = item.word;                    // stringa intera orizzontale
+      el.textContent = item.word;
       return el;
     }
 
@@ -325,7 +316,10 @@
         }
       }
 
-      // Mostra solo quando i pesi di BebasNeue sono pronti
+      // calcola quante colonne mostrare
+      updateColumns();
+
+      // mostra solo quando i pesi di BebasNeue sono pronti
       const waits = [300,400,500,700].map(w => document.fonts.load(`${w} 1rem "BebasNeue"`));
       Promise.all(waits).then(() => { grid.style.opacity = '1'; });
     }
@@ -336,14 +330,11 @@
       await fetchWordsRemote();
       setInterval(fetchWordsRemote, REFRESH_MS);
 
-      // Realtime (opzionale)
-      // const channel = sb.channel('realtime:words');
-      // channel.on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'words' }, payload => {
-      //   const r = payload.new;
-      //   wordsCache.unshift({ id: r.id, word: r.word, created_at: r.created_at });
-      //   buildWall();
-      // });
-      // channel.subscribe();
+      // aggiorna colonne su resize/orientamento
+      let t;
+      window.addEventListener('resize', () => {
+        clearTimeout(t); t = setTimeout(updateColumns, 100);
+      });
     });
 
     form.addEventListener('submit', async (e) => {
