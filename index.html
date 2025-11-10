@@ -3,112 +3,128 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Banner Interattivo</title>
+  <title>Un Futuro è Possibile</title>
+
+  <!-- Bebas Neue (Light/Book/Regular/Bold) -->
+  <link rel="preconnect" href="https://fonts.cdnfonts.com" crossorigin>
+  <link href="https://fonts.cdnfonts.com/css/bebas-neue" rel="stylesheet">
+
   <style>
     :root{
-      --banner-h: 72px;
-      --input-h: 92px;
-      --bg: #0b0b0b;
-      --fg: #fff;
-      --muted: #9aa0a6;
-      --accent: #8b5cf6;
-      --speed: 140; /* px/s */
+      --input-h: 100px;                           /* altezza barra input */
+      --bg: #8b00a3;                              /* sfondo */
+      --fg: #ffffff;                              /* testo banner */
+      --muted: #f1d9f6;                           /* testo hint */
+      --col-gap: 28px;                            /* spazio tra colonne */
+      --col-width: clamp(260px, 30vw, 480px);     /* larghezza colonna */
+      --fs: clamp(56px, 10vh, 160px);             /* dimensione testo banner */
+      --row-gap: 14px;                            /* spazio verticale tra righe */
     }
-    *{ box-sizing: border-box; }
+
+    * { box-sizing: border-box; }
     html, body { height: 100%; }
+
     body{
-      margin:0; background:var(--bg); color:var(--fg);
-      font: 16px/1.4 system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial;
-      padding-top: var(--banner-h);
-      padding-bottom: var(--input-h);
+      margin: 0;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: system-ui, "Helvetica Neue", Helvetica, Roboto, "Segoe UI", sans-serif; /* solo per l'UI sotto */
       min-height: 100dvh;
     }
 
-    /* Banner top */
+    /* Banner: fino sopra l’input */
     .banner{
-      position: fixed; inset: 0 0 auto 0; height: var(--banner-h);
-      z-index: 9999; background: rgba(0,0,0,0.92);
-      border-bottom: 1px solid rgba(255,255,255,0.12);
+      position: fixed;
+      inset: 0 0 auto 0;
+      height: calc(100dvh - var(--input-h) - env(safe-area-inset-bottom, 0px));
+      z-index: 10;
+      background: var(--bg);
       overflow: hidden;
     }
+
+    /* SOLO Bebas nel banner (niente altri fallback) */
+    .banner,
+    .banner *{
+      font-family: "Bebas Neue", "Bebas Neue Book", "Bebas Neue Light", "Bebas Neue Bold" !important;
+      font-synthesis: none;
+    }
+
+    /* Colonne: riempi dall'alto in basso, poi a destra */
     .banner__inner{
-      position: relative; display: flex; height: 100%;
-      width: max-content;
+      height: 100%;
+      padding: 16px 16px;
+      column-width: var(--col-width);
+      column-gap: var(--col-gap);
+      column-fill: auto;
+      opacity: 0;                          /* evita flash di fallback */
+      transition: opacity .2s ease;
     }
-    .track{
-      display:flex; align-items:center; height:100%; white-space:nowrap;
-      animation: scroll var(--duration, 25s) linear infinite;
-    }
-    .pill{
-      display:inline-flex; align-items:center; justify-content:center;
-      margin: 0 10px; padding: 8px 12px;
-      border-radius: 999px;
-      background: rgba(255,255,255,0.08);
-      border: 1px solid rgba(255,255,255,0.15);
-      color: #fff; font-weight: 600; letter-spacing: 0.02em;
-    }
-    .infoBar{
-      position:absolute; right: 10px; top: 6px; font-size:12px; color:var(--muted);
-      text-shadow: 0 1px 0 rgba(0,0,0,0.5);
-    }
-    @keyframes scroll { from { transform: translateX(0); } to { transform: translateX(-100%); } }
-    @media (prefers-reduced-motion: reduce){ .track{ animation: none; } }
 
-    /* Input bottom */
+    /* Ogni stringa = blocco orizzontale */
+    .block{
+      display: block;
+      break-inside: avoid;
+      margin: 0 0 var(--row-gap) 0;
+      color: var(--fg);
+      font-size: var(--fs);
+      line-height: 1;
+      letter-spacing: 0.01em;
+      white-space: pre-wrap;                /* preserva spazi multipli */
+      word-break: break-word;               /* va a capo solo se troppo lunga */
+      text-align: left;
+      overflow: hidden;
+    }
+
+    /* Input in basso (UI) */
     .inputBar{
-      position: fixed; inset: auto 0 0 0; height: var(--input-h);
-      z-index: 9999; background: rgba(0,0,0,0.9);
-      border-top: 1px solid rgba(255,255,255,0.12);
-      display: flex; align-items: center; padding: 12px 14px;
+      position: fixed;
+      left: 0; right: 0; bottom: 0;
+      height: calc(var(--input-h) + env(safe-area-inset-bottom, 0px));
+      z-index: 20;
+      background: var(--bg);
+      border-top: 1px solid rgba(255,255,255,0.25);
+      display: flex;
+      align-items: center;
+      padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px)) 16px;
       gap: 10px;
+      color: var(--muted);
     }
-    form{ display:flex; gap:8px; width:100%; }
+    form{ display: flex; gap: 8px; width: 100%; }
     input[type="text"]{
-      flex:1; padding: 14px 16px; border-radius: 12px;
-      border:1px solid rgba(255,255,255,0.18);
-      background: rgba(255,255,255,0.06); color:#fff; outline:none;
+      flex: 1;
+      padding: 16px 18px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.35);
+      background: rgba(255,255,255,0.08);
+      color: #fff;
+      outline: none;
+      font-size: 18px;
     }
-    input::placeholder{ color:#bbb; }
+    input::placeholder{ color: var(--muted); }
     button{
-      padding: 14px 16px; border-radius: 12px; cursor: pointer;
-      border:1px solid rgba(255,255,255,0.35);
-      background: transparent; color:#fff; font-weight:600;
+      padding: 16px 18px;
+      border-radius: 12px;
+      cursor: pointer;
+      border: 1px solid rgba(255,255,255,0.8);
+      background: transparent;
+      color: #fff;
+      font-weight: 800;
+      font-size: 16px;
     }
-    .hint{ font-size:12px; color:var(--muted); }
-
-    main{ padding: 24px; color:#cfd5db; }
-    a { color: var(--accent); }
+    .hint{ font-size:12px; color: var(--muted); min-width: 140px; text-align: right; }
   </style>
-  <!--
-    REQUISITI SUPABASE (da creare prima):
-    create table public.words (
-      id bigserial primary key,
-      word text not null check (char_length(word) between 1 and 50 and word !~* '(https?://|www\\.)'),
-      device_id uuid not null,
-      created_at timestamptz not null default now()
-    );
-    alter table public.words enable row level security;
-    create policy "public read" on public.words for select using (true);
-    create policy "public insert" on public.words for insert with check (true);
-
-    (Opzionale ma consigliato) Trigger per rate-limit per device_id, come da SQL che ti ho passato.
-  -->
 </head>
 <body>
 
+  <!-- BANNER -->
   <div class="banner" aria-hidden="true">
-    <div class="banner__inner" id="bannerInner"></div>
-    <div class="infoBar">Parole: <span id="count">0</span> • Ultimo update: <span id="lastUpdate">—</span></div>
+    <div class="banner__inner" id="bannerGrid"></div>
   </div>
 
-  <main>
-    <h1>Installazione — Banner Interattivo</h1>
-    <p>Il banner in alto scorre le parole inviate dagli utenti. La lista si aggiorna ogni 30s.</p>
-  </main>
-
+  <!-- INPUT -->
   <div class="inputBar">
     <form id="wordForm" autocomplete="off">
-      <input id="wordInput" type="text" maxlength="70" placeholder="Scrivi parole (separa con virgola) e premi Invio" />
+      <input id="wordInput" type="text" maxlength="200" placeholder="Scrivi stringhe o frasi (separa con virgola) e premi Invio" />
       <button type="submit">Invia</button>
     </form>
     <div class="hint" id="hint"></div>
@@ -117,35 +133,39 @@
   <!-- Supabase SDK -->
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <script>
-    // === CONFIGURA QUI ===
+    // === SUPABASE CONFIG ===
     const SUPABASE_URL = 'https://jndommppkmwrrpmxhfzu.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpuZG9tbXBwa213cnJwbXhoZnp1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI3Njg2MDAsImV4cCI6MjA3ODM0NDYwMH0.pwhNlDTgvRWWkmWaSesmN0iBlEzJ6BJEaFyE3NsKP2A';
     const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     // === PARAMS ===
-    const REFRESH_MS = 30000;      // aggiorna ogni 30s
-    const MAX_FETCH = 500;         // mostra max 500 parole (in ordine cronologico)
-    const MAX_PER_SUBMIT = 5;      // massimo parole per invio
-    const COOLDOWN_MS = 4000;      // anti-spam client (aggiunta soft al trigger server)
-    const SPEED_PX_S = 140;        // velocità scorrimento
-    const BLOCKLIST = [];          // opzionale: ['parola1','parola2',...]
+    const REFRESH_MS = 30000;
+    const MAX_FETCH = 800;
+    const MAX_DISPLAY = 500;
+    const MAX_PER_SUBMIT = 5;
+    const COOLDOWN_MS = 4000;
+    const DB_MAX = 50;     // limite DB
+    const BLOCKLIST = [];
 
     // === DOM ===
-    const bannerInner = document.getElementById('bannerInner');
-    const countEl = document.getElementById('count');
-    const lastUpdateEl = document.getElementById('lastUpdate');
+    const grid = document.getElementById('bannerGrid');
     const form = document.getElementById('wordForm');
     const input = document.getElementById('wordInput');
     const hint = document.getElementById('hint');
 
-    // === DEVICE ID persistente ===
+    // === DEVICE ID ===
     function getDeviceId(){
       try {
         let id = localStorage.getItem('device_id');
-        if (!id) { id = (crypto.randomUUID ? crypto.randomUUID() : ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g,c=>(c^crypto.getRandomValues(new Uint8Array(1))[0]&15>>c/4).toString(16))); localStorage.setItem('device_id', id); }
+        if (!id) {
+          id = crypto.randomUUID ? crypto.randomUUID() :
+            ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
+              (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+            );
+          localStorage.setItem('device_id', id);
+        }
         return id;
       } catch {
-        // fallback volatile
         return '00000000-0000-4000-8000-' + Math.random().toString(16).slice(2, 14);
       }
     }
@@ -156,42 +176,75 @@
     const escapeMap = { '<':'&lt;', '>':'&gt;', '&':'&amp;', '"':'&quot;' };
     const sanitize = s => s.replace(/[<>"&]/g, ch => escapeMap[ch]);
     const isLink = s => /(https?:\/\/|www\.)/i.test(s);
-    const tokenize = raw => raw
-      .split(/[,;\n]+/)
-      .map(s => s.trim())
-      .filter(Boolean)
-      .map(s => s.slice(0, 50)); // max 50 (coerente col check DB)
 
-    // === DATA CACHE ===
+    // Split solo per virgola/newline, preserva spazi interni ed esterni
+    const tokenize = raw => raw
+      .split(/(?:,|\n)+/)
+      .map(s => s) // niente trim
+      .filter(s => s.replace(/\s/g,'').length > 0);
+
+    // Aggiungi uno spazio finale (senza superare limite DB)
+    function ensureTrailingSpace(w){
+      if (w.endsWith(' ')) return w.slice(0, DB_MAX);
+      if (w.length < DB_MAX) return w + ' ';
+      return w.slice(0, DB_MAX - 1) + ' ';
+    }
+
+    // Varianti reali disponibili nel CSS di cdnfonts:
+    // - "Bebas Neue Light"
+    // - "Bebas Neue Book"
+    // - "Bebas Neue"        (Regular)
+    // - "Bebas Neue Bold"
+    const BEBAS_FAMILIES = [
+      '"Bebas Neue Light"',
+      '"Bebas Neue Book"',
+      '"Bebas Neue"',
+      '"Bebas Neue Bold"',
+    ];
+
+    // Hash FNV-1a per scelta STABILE della variante
+    function fnv1a(str){
+      let h = 0x811c9dc5;
+      for (let i = 0; i < str.length; i++){
+        h ^= str.charCodeAt(i);
+        h = Math.imul(h, 0x01000193);
+      }
+      return h >>> 0;
+    }
+    function pickFamilyFor(text){
+      const idx = fnv1a(text) % BEBAS_FAMILIES.length;
+      return BEBAS_FAMILIES[idx];
+    }
+
+    // === DATA ===
     let wordsCache = []; // [{word, created_at}]
 
     async function fetchWordsRemote(){
       const { data, error } = await sb
         .from('words')
         .select('word, created_at')
-        .order('created_at', { ascending: true })
+        .order('created_at', { ascending: false })
         .limit(MAX_FETCH);
 
       if (error) {
         console.warn('Fetch error:', error.message);
-        hint.textContent = 'Problema di connessione, riprovo...';
+        hint.textContent = 'Connessione instabile, riprovo...';
         return;
       }
       hint.textContent = '';
       wordsCache = data || [];
-      buildBanner();
+      buildWall();
     }
 
     async function insertWordsRemote(tokens){
       if (!tokens.length) return;
 
-      // sanitizza e filtra
       let clean = tokens
         .map(t => sanitize(t))
         .filter(Boolean)
         .filter(w => !isLink(w))
-        .filter(w => !BLOCKLIST.includes(w.toLowerCase()))
-        .slice(0, MAX_PER_SUBMIT);
+        .slice(0, MAX_PER_SUBMIT)
+        .map(ensureTrailingSpace);
 
       if (!clean.length) return;
 
@@ -210,48 +263,40 @@
         return;
       }
 
-      // Aggiorna subito la UI (ottimistica) e il polling riallinea
+      // UI ottimistica
       const nowIso = new Date().toISOString();
-      clean.forEach(w => wordsCache.push({ word: w, created_at: nowIso }));
-      buildBanner();
+      clean.forEach(w => wordsCache.unshift({ word: w, created_at: nowIso }));
+      buildWall();
       hint.textContent = 'Inviato!';
       setTimeout(() => { hint.textContent = ''; }, 1200);
     }
 
-    function buildBanner(){
-      const words = wordsCache.map(x => x.word);
-      bannerInner.innerHTML = '';
+    function makeBlock(text){
+      const block = document.createElement('div');
+      block.className = 'block';
+      block.style.fontFamily = pickFamilyFor(text); // variante Bebas STABILE
+      block.textContent = text;                     // stringa orizzontale
+      return block;
+    }
 
-      const track1 = document.createElement('div');
-      track1.className = 'track';
+    function buildWall(){
+      grid.innerHTML = '';
+      const items = wordsCache.slice(0, MAX_DISPLAY).map(x => x.word);
 
-      if (words.length === 0) {
-        const span = document.createElement('span');
-        span.className = 'pill';
-        span.textContent = 'Scrivi qui sotto e apparirai nel banner';
-        track1.appendChild(span);
+      if (items.length === 0){
+        grid.appendChild(makeBlock('Scrivi qui sotto ')); // con spazio finale
       } else {
-        words.forEach(w => {
-          const span = document.createElement('span');
-          span.className = 'pill';
-          span.textContent = w;
-          track1.appendChild(span);
-        });
+        for (const txt of items){
+          grid.appendChild(makeBlock(txt));
+        }
       }
 
-      const track2 = track1.cloneNode(true);
-      bannerInner.appendChild(track1);
-      bannerInner.appendChild(track2);
-
-      // durata in base alla larghezza
-      requestAnimationFrame(() => {
-        const width = track1.scrollWidth || 1000;
-        const duration = Math.max(10, width / SPEED_PX_S);
-        bannerInner.style.setProperty('--duration', duration + 's');
-      });
-
-      countEl.textContent = words.length;
-      lastUpdateEl.textContent = new Date().toLocaleTimeString();
+      // mostra il banner solo quando i Bebas sono pronti (niente fallback)
+      if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(() => { grid.style.opacity = '1'; });
+      } else {
+        setTimeout(() => { grid.style.opacity = '1'; }, 800);
+      }
     }
 
     // Init
@@ -260,26 +305,25 @@
       await fetchWordsRemote();
       setInterval(fetchWordsRemote, REFRESH_MS);
 
-      // (Opzionale) realtime istantaneo — scommenta per attivare
+      // Realtime (opzionale)
       // const channel = sb.channel('realtime:words');
       // channel.on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'words' }, payload => {
       //   const r = payload.new;
-      //   wordsCache.push({ word: r.word, created_at: r.created_at });
-      //   buildBanner();
+      //   wordsCache.unshift({ word: r.word, created_at: r.created_at });
+      //   buildWall();
       // });
       // channel.subscribe();
     });
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const raw = input.value.trim();
+      const raw = input.value;
       if (!raw) return;
       const tokens = tokenize(raw);
       input.value = '';
       await insertWordsRemote(tokens);
     });
 
-    // Aggiorna quando torni visibile (es. dopo cambio tab)
     document.addEventListener('visibilitychange', () => {
       if (!document.hidden) fetchWordsRemote();
     });
