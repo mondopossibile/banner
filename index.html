@@ -13,13 +13,14 @@
 
   <style>
     :root{
-      --input-h: 100px;   /* altezza barra input */
-      --bg: #8b00a3;      /* sfondo */
-      --fg: #ffffff;      /* testo banner */
-      --muted: #f1d9f6;   /* testo hint */
-      --col-gap: 28px;    /* spazio orizzontale tra colonne */
-      --fs: clamp(56px, 10vh, 160px); /* dimensione testo banner */
-      --row-gap: 14px;    /* spazio verticale tra righe */
+      --top-h: 84px;                 /* altezza fascia top */
+      --input-h: 100px;              /* altezza barra input */
+      --bg: #8b00a3;                 /* sfondo */
+      --fg: #ffffff;                 /* testo banner */
+      --muted: #f1d9f6;              /* testo hint */
+      --col-gap: 28px;               /* spazio orizzontale tra colonne */
+      --fs: clamp(56px, 10vh, 160px);/* dimensione testo banner */
+      --row-gap: 14px;               /* spazio verticale tra righe */
     }
 
     /* SELF-HOSTED BEBAS NEUE */
@@ -27,6 +28,14 @@
     @font-face{ font-family: "BebasNeue"; src: url("./fonts/BebasNeue-Book.woff") format("woff");    font-weight: 400; font-style: normal; font-display: swap; }
     @font-face{ font-family: "BebasNeue"; src: url("./fonts/BebasNeue-Regular.woff") format("woff"); font-weight: 500; font-style: normal; font-display: swap; }
     @font-face{ font-family: "BebasNeue"; src: url("./fonts/BebasNeue-Bold.woff") format("woff");    font-weight: 700; font-style: normal; font-display: swap; }
+
+    /* FONT TOP BAR (locale) */
+    @font-face{
+      font-family: "UahUnfontPossibile";
+      src: url("./fonts/Uah_unfontpossibile-Regular.woff2") format("woff2"),
+           url("./fonts/Uah_unfontpossibile-Regular.ttf") format("truetype");
+      font-weight: 400; font-style: normal; font-display: swap;
+    }
 
     * { box-sizing: border-box; }
     html, body { height: 100%; }
@@ -39,11 +48,30 @@
       overflow: hidden; /* scroll solo nel banner */
     }
 
-    /* Banner */
+    /* TOP BAR */
+    .topBar{
+      position: fixed;
+      left: 0; right: 0; top: 0;
+      height: calc(var(--top-h) + env(safe-area-inset-top, 0px));
+      padding: calc(8px + env(safe-area-inset-top, 0px)) 16px 8px 16px;
+      z-index: 30;
+      background: var(--bg);
+      color: #d7e046; /* richiesto */
+      display: flex; align-items: center; justify-content: center;
+      text-align: center;
+      font-family: "UahUnfontPossibile";
+      font-size: clamp(18px, 3.2vh, 28px);
+      line-height: 1;
+      letter-spacing: .02em;
+    }
+
+    /* Banner (parte sotto la topBar, sopra l’input) */
     .banner{
       position: fixed;
-      inset: 0 0 auto 0;
-      height: calc(100dvh - var(--input-h) - env(safe-area-inset-bottom, 0px));
+      left: 0; right: 0;
+      top: calc(var(--top-h) + env(safe-area-inset-top, 0px));
+      height: calc(100dvh - var(--top-h) - var(--input-h)
+                   - env(safe-area-inset-bottom, 0px) - env(safe-area-inset-top, 0px));
       z-index: 10;
       background: var(--bg);
       border: 0;
@@ -152,6 +180,9 @@
   </style>
 </head>
 <body>
+
+  <!-- TOP BAR -->
+  <div class="topBar">un futuro è possibile quando...</div>
 
   <!-- BANNER -->
   <div class="banner" aria-hidden="true">
