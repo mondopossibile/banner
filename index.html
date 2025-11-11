@@ -49,18 +49,22 @@
     }
 
     /* TOP BAR */
-    .topBar{
+    .topBar {
       position: fixed;
-      left: 0; right: 0; top: 0;
+      left: 0;
+      right: 0;
+      top: 0;
       height: calc(var(--top-h) + env(safe-area-inset-top, 0px));
       padding: calc(8px + env(safe-area-inset-top, 0px)) 16px 8px 16px;
       z-index: 30;
       background: var(--bg);
       color: #d7e046; /* richiesto */
-      display: flex; align-items: center; justify-content: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       text-align: center;
       font-family: "UahUnfontPossibile";
-      font-size: clamp(48px, 8.5vh, 70px);
+      font-size: 70px; /* desktop */
       line-height: 1;
       letter-spacing: .02em;
     }
@@ -164,17 +168,21 @@
     }
     .hint{ font-size:12px; color: var(--muted); min-width: 140px; text-align: right; }
 
-    /* Mobile: 1 colonna scrollabile */
+    /* Mobile: 1 colonna scrollabile e top bar più piccola */
     @media (max-width: 600px){
       :root{
         --col-gap: 18px;
         --row-gap: 10px;
         --fs: clamp(44px, 9.5vh, 120px);
+        --top-h: 96px; /* fascia top più bassa su mobile */
       }
       .banner__inner{
         column-count: 1;
         -webkit-column-count: 1;
         -moz-column-count: 1;
+      }
+      .topBar{
+        font-size: 32px; /* testo top bar ridotto su mobile */
       }
     }
   </style>
