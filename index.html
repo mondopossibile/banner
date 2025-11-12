@@ -13,14 +13,14 @@
 
   <style>
     :root{
-      --top-h: 140px;               /* altezza fascia top (aumentata) */
+      --top-h: 140px;               /* altezza fascia top */
       --input-h: 100px;             /* altezza barra input */
-      --bg: #8b00a3;                /* sfondo */
-      --fg: #ffffff;                /* testo banner */
-      --muted: #f1d9f6;             /* testo hint */
-      --col-gap: 28px;              /* spazio orizzontale tra colonne */
-      --fs: clamp(56px, 10vh, 160px);/* dimensione testo banner */
-      --row-gap: 14px;              /* spazio verticale tra righe */
+      --bg: #8b00a3;
+      --fg: #ffffff;
+      --muted: #f1d9f6;
+      --col-gap: 28px;
+      --fs: clamp(56px, 10vh, 160px);
+      --row-gap: 14px;
     }
 
     /* SELF-HOSTED BEBAS NEUE */
@@ -58,7 +58,7 @@
       padding: calc(8px + env(safe-area-inset-top, 0px)) 16px 8px 16px;
       z-index: 30;
       background: var(--bg);
-      color: #d7e046; /* richiesto */
+      color: #d7e046;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -69,7 +69,7 @@
       letter-spacing: .02em;
     }
 
-    /* Banner (parte sotto la topBar, sopra l’input) */
+    /* Banner */
     .banner{
       position: fixed;
       left: 0; right: 0;
@@ -83,39 +83,37 @@
       grid-template-rows: 1fr;
     }
 
-    /* SOLO Bebas dentro al banner */
+    /* SOLO Bebas nel banner */
     .banner, .banner *{
       font-family: "BebasNeue" !important;
       font-synthesis: none;
     }
 
-    /* Colonne + scroll direttamente sull'inner */
+    /* Colonne + scroll sull'inner */
     .banner__inner{
       height: 100%;
       padding: 16px 16px;
       column-gap: var(--col-gap);
       column-fill: auto;
-      /* 3 colonne desktop */
-      column-count: 3;
+      column-count: 3; /* desktop */
       -webkit-column-count: 3;
       -moz-column-count: 3;
 
-      overflow-y: auto;               /* scroll verticale del banner */
+      overflow-y: auto;
       -webkit-overflow-scrolling: touch;
       overscroll-behavior: contain;
 
-      /* scrollbar styling */
       scrollbar-width: thin;
       scrollbar-color: rgba(255,255,255,.35) transparent;
 
-      opacity: 0;                     /* evita flash finché i font non sono pronti */
+      opacity: 0;
       transition: opacity .2s ease;
     }
     .banner__inner::-webkit-scrollbar{ width: 10px; }
     .banner__inner::-webkit-scrollbar-thumb{ background: rgba(255,255,255,.35); border-radius: 8px; }
     .banner__inner::-webkit-scrollbar-track{ background: transparent; }
 
-    /* Ogni stringa = riga */
+    /* Ogni stringa = riga, centrata */
     .block{
       display: block;
       break-inside: avoid;
@@ -124,13 +122,13 @@
       font-size: var(--fs);
       line-height: 1;
       letter-spacing: 0.01em;
-      white-space: pre-wrap;   /* preserva spazi multipli */
-      word-break: break-word;  /* va a capo solo se troppo lunga */
-      text-align: left;
+      white-space: pre-wrap;
+      word-break: break-word;
+      text-align: center; /* centrato */
       overflow: hidden;
     }
 
-    /* Input in basso (UI) */
+    /* Input */
     .inputBar{
       position: fixed;
       left: 0; right: 0; bottom: 0;
@@ -144,7 +142,7 @@
       gap: 10px;
       color: var(--muted);
     }
-    form{ display: flex; gap: 8px; width: 100%; }
+    form{ display: flex; gap: 8px; width: 100%; align-items: center; }
     input[type="text"]{
       flex: 1;
       padding: 16px 18px;
@@ -155,6 +153,13 @@
       outline: none;
       font-size: 18px;
     }
+    .counter{
+      min-width: 64px;
+      text-align: right;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .counter.warn{ color: #ffd966; }
     input::placeholder{ color: var(--muted); }
     button{
       padding: 16px 18px;
@@ -168,13 +173,13 @@
     }
     .hint{ font-size:12px; color: var(--muted); min-width: 140px; text-align: right; }
 
-    /* Mobile: 1 colonna scrollabile e top bar più piccola */
+    /* Mobile */
     @media (max-width: 600px){
       :root{
         --col-gap: 18px;
         --row-gap: 10px;
         --fs: clamp(44px, 9.5vh, 120px);
-        --top-h: 96px; /* fascia top più bassa su mobile */
+        --top-h: 96px;
       }
       .banner__inner{
         column-count: 1;
@@ -182,14 +187,9 @@
         -moz-column-count: 1;
       }
       .topBar{
-        font-size: 32px; /* testo top bar ridotto su mobile */
+        font-size: 32px;
       }
     }
-
-    /* Centra i testi nel banner */
-      .banner__inner .block {
-        text-align: center;
-      }
   </style>
 </head>
 <body>
@@ -205,7 +205,8 @@
   <!-- INPUT -->
   <div class="inputBar">
     <form id="wordForm" autocomplete="off">
-      <input id="wordInput" type="text" maxlength="200" placeholder="Dicci la tua" />
+      <input id="wordInput" type="text" maxlength="100" placeholder="Dicci la tua (max 100)" />
+      <span class="counter"><span id="charCount">0</span>/100</span>
       <button type="submit">Invia</button>
     </form>
     <div class="hint" id="hint"></div>
@@ -225,7 +226,8 @@
     const MAX_DISPLAY = 1200;
     const MAX_PER_SUBMIT = 5;
     const COOLDOWN_MS = 4000;
-    const DB_MAX = 50;
+    const DB_MAX = 100;     // <— lato client allineato a 100
+    const MAX_INPUT = 100;  // <— limite input e counter
     const BLOCKLIST = [];
 
     // === DOM ===
@@ -233,6 +235,7 @@
     const form = document.getElementById('wordForm');
     const input = document.getElementById('wordInput');
     const hint = document.getElementById('hint');
+    const charCountEl = document.getElementById('charCount');
 
     // === DEVICE ID ===
     function getDeviceId(){
@@ -258,7 +261,7 @@
     const sanitize = s => s.replace(/[<>"&]/g, ch => escapeMap[ch]);
     const isLink = s => /(https?:\/\/|www\.)/i.test(s);
 
-    // Split per virgola/newline, preserva spazi interni ed esterni
+    // Split per virgola/newline, preserva spazi interni/esterni
     const tokenize = raw => raw
       .split(/(?:,|\n)+/)
       .map(s => s)
@@ -285,6 +288,15 @@
       const idx = fnv1a(key) % WEIGHTS.length;
       return WEIGHTS[idx];
     }
+
+    // === COUNTER ===
+    function updateCounter(){
+      const len = input.value.length;
+      charCountEl.textContent = len;
+      const warn = len >= MAX_INPUT * 0.9;
+      charCountEl.parentElement.classList.toggle('warn', warn);
+    }
+    input.addEventListener('input', updateCounter);
 
     // === DATA ===
     let wordsCache = []; // [{id, word, created_at}]
@@ -342,7 +354,7 @@
     function makeBlock(item){
       const el = document.createElement('div');
       el.className = 'block';
-      el.style.fontWeight = pickWeightForItem(item); // 300/400/500/700 stabile
+      el.style.fontWeight = pickWeightForItem(item);
       el.textContent = item.word;
       return el;
     }
@@ -359,7 +371,6 @@
         }
       }
 
-      // Mostra solo quando i pesi di BebasNeue sono pronti
       const waits = [300,400,500,700].map(w => document.fonts.load(`${w} 1rem "BebasNeue"`));
       Promise.all(waits).then(() => { grid.style.opacity = '1'; });
     }
@@ -367,6 +378,7 @@
     // Init
     document.addEventListener('DOMContentLoaded', async () => {
       input.focus();
+      updateCounter();
       await fetchWordsRemote();
       setInterval(fetchWordsRemote, REFRESH_MS);
     });
@@ -377,6 +389,7 @@
       if (!raw) return;
       const tokens = tokenize(raw);
       input.value = '';
+      updateCounter();
       await insertWordsRemote(tokens);
     });
 
