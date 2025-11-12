@@ -28,6 +28,7 @@
       --btn-w: 96px;  /* larghezza bottone desktop */
       --ctr-w: 64px;  /* larghezza area counter */
       --gap: 8px;     /* spazi interni */
+      --btn-gap: 6px; /* micro-gap desiderato dal bordo destro */
     }
 
     /* SELF-HOSTED BEBAS NEUE */
@@ -157,7 +158,7 @@
       border-top: 1px solid rgba(255,255,255,0.25);
       display: flex;
       align-items: center;
-      /* padding simmetrico dx/sx → gap uguale a sinistra e a destra */
+      /* padding simmetrico dx/sx */
       padding: var(--bar-pad-y) var(--bar-pad-x) calc(var(--bar-pad-y) + env(safe-area-inset-bottom, 0px)) var(--bar-pad-x);
       color: var(--muted);
     }
@@ -194,7 +195,8 @@
 
     .inputBar button{
       position: absolute;
-      right: 0; /* allinea al bordo destro del form, che ora ha padding destro simmetrico */
+      /* micro-gap finale dal bordo destro dello schermo */
+      right: calc(env(safe-area-inset-right, 0px) + var(--btn-gap) - var(--bar-pad-x));
       top: var(--bar-pad-y);
       bottom: calc(var(--bar-pad-y) + env(safe-area-inset-bottom, 0px));
       width: var(--btn-w);
@@ -227,6 +229,7 @@
         --btn-w: 82px;  /* bottone più stretto */
         --ctr-w: 52px;  /* counter più stretto */
         --gap: 6px;
+        --btn-gap: 8px; /* leggermente più grande su mobile */
       }
       input[type="text"]{ padding: 12px 12px; font-size: 16px; }
       .inputBar button{ font-size: 15px; }
@@ -426,7 +429,6 @@
 
       (data || []).forEach(r => wordsCache.unshift(r));
       buildWall();
-      hint.textContent = 'Inviato!';
       setTimeout(() => { hint.textContent = ''; }, 1200);
     }
 
