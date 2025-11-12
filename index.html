@@ -21,6 +21,13 @@
       --col-gap: 28px;
       --fs: clamp(56px, 10vh, 160px);
       --row-gap: 14px;
+
+      /* Barra input vars */
+      --bar-pad-x: 16px;
+      --bar-pad-y: 12px;
+      --btn-w: 96px;  /* larghezza bottone desktop */
+      --ctr-w: 64px;  /* larghezza area counter */
+      --gap: 8px;     /* spazi interni */
     }
 
     /* SELF-HOSTED BEBAS NEUE */
@@ -140,7 +147,7 @@
       vertical-align: -0.05em;
     }
 
-    /* Input */
+    /* Input bar */
     .inputBar{
       position: fixed;
       left: 0; right: 0; bottom: 0;
@@ -150,21 +157,19 @@
       border-top: 1px solid rgba(255,255,255,0.25);
       display: flex;
       align-items: center;
-      padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px)) 16px;
+      padding: var(--bar-pad-y) var(--bar-pad-x) calc(var(--bar-pad-y) + env(safe-area-inset-bottom, 0px)) var(--bar-pad-x);
       gap: 10px;
       color: var(--muted);
     }
-    form{
-      display: flex;
-      gap: 8px;
-      width: 100%;
-      align-items: center;
-      min-width: 0; /* importante per evitare overflow orizzontale */
+    .inputBar > form{
+      position: relative;         /* per posizionare counter e bottone */
+      flex: 1 1 auto;
+      min-width: 0;               /* evita overflow orizzontale */
     }
     input[type="text"]{
-      flex: 1 1 0;      /* permette di restringersi prima di far uscire il bottone */
-      min-width: 0;     /* consente lo shrink effettivo in flex */
+      width: 100%;
       padding: 16px 18px;
+      padding-right: calc(var(--btn-w) + var(--ctr-w) + (2 * var(--gap))); /* spazio per counter + bottone */
       border-radius: 12px;
       border: 1px solid rgba(255,255,255,0.35);
       background: rgba(255,255,255,0.08);
@@ -173,18 +178,26 @@
       font-size: 18px;  /* >=16px evita zoom iOS */
     }
     .counter{
-      flex: 0 0 auto;
-      min-width: 64px;
+      position: absolute;
+      right: calc(var(--bar-pad-x) + var(--btn-w) + var(--gap));
+      top: 50%;
+      transform: translateY(-50%);
+      width: var(--ctr-w);
       text-align: right;
       color: var(--muted);
       font-size: 12px;
       white-space: nowrap;
+      pointer-events: none; /* non cliccabile */
     }
     .counter.warn{ color: #ffd966; }
-    input::placeholder{ color: var(--muted); }
-    button{
-      flex: 0 0 auto;
-      padding: 16px 18px;
+
+    .inputBar button{
+      position: absolute;
+      right: var(--bar-pad-x);
+      top: var(--bar-pad-y);
+      bottom: calc(var(--bar-pad-y) + env(safe-area-inset-bottom, 0px));
+      width: var(--btn-w);
+      padding: 0 12px;
       border-radius: 12px;
       cursor: pointer;
       border: 1px solid rgba(255,255,255,0.8);
@@ -192,19 +205,23 @@
       color: #fff;
       font-weight: 800;
       font-size: 16px;
-      white-space: nowrap;      /* non andare a capo */
-      min-width: 84px;          /* garantisce click target visibile */
+      white-space: nowrap;
     }
 
     .hint{ font-size:12px; color: var(--muted); min-width: 140px; text-align: right; }
 
-    /* Mobile: compattiamo padding e font per far rientrare tutto */
+    /* Mobile: compattiamo e assicuriamo spazio per input */
     @media (max-width: 480px){
-      form{ gap: 6px; }
-      .inputBar{ padding: 10px 12px calc(10px + env(safe-area-inset-bottom, 0px)) 12px; }
+      :root{
+        --bar-pad-x: 12px;
+        --bar-pad-y: 10px;
+        --btn-w: 82px;  /* bottone più stretto */
+        --ctr-w: 52px;  /* counter più stretto */
+        --gap: 6px;
+      }
       input[type="text"]{ padding: 12px 12px; font-size: 16px; }
-      .counter{ min-width: 52px; font-size: 11px; }
-      button{ padding: 12px 12px; font-size: 15px; min-width: 72px; }
+      .inputBar button{ font-size: 15px; }
+      .hint{ display: none; } /* libera spazio su telefoni piccoli */
     }
 
     /* Mobile layout */
