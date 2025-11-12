@@ -157,8 +157,8 @@
       border-top: 1px solid rgba(255,255,255,0.25);
       display: flex;
       align-items: center;
-      padding: var(--bar-pad-y) var(--bar-pad-x) calc(var(--bar-pad-y) + env(safe-area-inset-bottom, 0px)) var(--bar-pad-x);
-      gap: 10px;
+      /* niente padding destro: il bottone deve toccare il margine */
+      padding: var(--bar-pad-y) 0 calc(var(--bar-pad-y) + env(safe-area-inset-bottom, 0px)) var(--bar-pad-x);
       color: var(--muted);
     }
     .inputBar > form{
@@ -169,7 +169,8 @@
     input[type="text"]{
       width: 100%;
       padding: 16px 18px;
-      padding-right: calc(var(--btn-w) + var(--ctr-w) + (2 * var(--gap))); /* spazio per counter + bottone */
+      /* spazio per counter + bottone + eventuale safe area a destra */
+      padding-right: calc(var(--btn-w) + var(--ctr-w) + (2 * var(--gap)) + env(safe-area-inset-right, 0px));
       border-radius: 12px;
       border: 1px solid rgba(255,255,255,0.35);
       background: rgba(255,255,255,0.08);
@@ -179,7 +180,7 @@
     }
     .counter{
       position: absolute;
-      right: calc(var(--bar-pad-x) + var(--btn-w) + var(--gap));
+      right: calc(var(--btn-w) + var(--gap));
       top: 50%;
       transform: translateY(-50%);
       width: var(--ctr-w);
@@ -187,13 +188,13 @@
       color: var(--muted);
       font-size: 12px;
       white-space: nowrap;
-      pointer-events: none; /* non cliccabile */
+      pointer-events: none;
     }
     .counter.warn{ color: #ffd966; }
 
     .inputBar button{
       position: absolute;
-      right: var(--bar-pad-x);
+      right: 0; /* flush al margine destro */
       top: var(--bar-pad-y);
       bottom: calc(var(--bar-pad-y) + env(safe-area-inset-bottom, 0px));
       width: var(--btn-w);
@@ -208,7 +209,16 @@
       white-space: nowrap;
     }
 
-    .hint{ font-size:12px; color: var(--muted); min-width: 140px; text-align: right; }
+    /* hint spostata a sinistra, assoluta, per non togliere larghezza al form */
+    .hint{
+      position: absolute;
+      left: var(--bar-pad-x);
+      bottom: calc(var(--bar-pad-y) + env(safe-area-inset-bottom, 0px));
+      transform: translateY(0);
+      font-size: 12px;
+      color: var(--muted);
+      pointer-events: none;
+    }
 
     /* Mobile: compattiamo e assicuriamo spazio per input */
     @media (max-width: 480px){
