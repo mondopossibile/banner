@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Un Futuro è Possibile</title>
   <link rel="icon" href="favicon.ico?v=1" sizes="any">
   <link rel="icon" type="image/png" href="favicon-32x32.png?v=1" sizes="32x32">
@@ -43,9 +43,11 @@
       margin: 0;
       background: var(--bg);
       color: var(--fg);
-      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Helvetica, sans-serif; /* solo UI */
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Helvetica, sans-serif;
       min-height: 100dvh;
       overflow: hidden; /* scroll solo nel banner */
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
     }
 
     /* TOP BAR */
@@ -132,11 +134,12 @@
     .uahGlyph{
       font-family: "UahUnfontPossibile" !important;
       font-weight: 400;
-		  font-size: 2em;      
-		  line-height: 0.9;      /* compatta un po' in verticale */
-		  display: inline-block; 
-		  vertical-align: -0.05em; /* piccolo aggiustamento verticale */
-}
+      font-size: 2em;
+      line-height: 0.9;
+      display: inline-block;
+      vertical-align: -0.05em;
+    }
+
     /* Input */
     .inputBar{
       position: fixed;
@@ -151,26 +154,36 @@
       gap: 10px;
       color: var(--muted);
     }
-    form{ display: flex; gap: 8px; width: 100%; align-items: center; }
+    form{
+      display: flex;
+      gap: 8px;
+      width: 100%;
+      align-items: center;
+      min-width: 0; /* importante per evitare overflow orizzontale */
+    }
     input[type="text"]{
-      flex: 1;
+      flex: 1 1 0;      /* permette di restringersi prima di far uscire il bottone */
+      min-width: 0;     /* consente lo shrink effettivo in flex */
       padding: 16px 18px;
       border-radius: 12px;
       border: 1px solid rgba(255,255,255,0.35);
       background: rgba(255,255,255,0.08);
       color: #fff;
       outline: none;
-      font-size: 18px;
+      font-size: 18px;  /* >=16px evita zoom iOS */
     }
     .counter{
+      flex: 0 0 auto;
       min-width: 64px;
       text-align: right;
       color: var(--muted);
       font-size: 12px;
+      white-space: nowrap;
     }
     .counter.warn{ color: #ffd966; }
     input::placeholder{ color: var(--muted); }
     button{
+      flex: 0 0 auto;
       padding: 16px 18px;
       border-radius: 12px;
       cursor: pointer;
@@ -179,10 +192,22 @@
       color: #fff;
       font-weight: 800;
       font-size: 16px;
+      white-space: nowrap;      /* non andare a capo */
+      min-width: 84px;          /* garantisce click target visibile */
     }
+
     .hint{ font-size:12px; color: var(--muted); min-width: 140px; text-align: right; }
 
-    /* Mobile */
+    /* Mobile: compattiamo padding e font per far rientrare tutto */
+    @media (max-width: 480px){
+      form{ gap: 6px; }
+      .inputBar{ padding: 10px 12px calc(10px + env(safe-area-inset-bottom, 0px)) 12px; }
+      input[type="text"]{ padding: 12px 12px; font-size: 16px; }
+      .counter{ min-width: 52px; font-size: 11px; }
+      button{ padding: 12px 12px; font-size: 15px; min-width: 72px; }
+    }
+
+    /* Mobile layout */
     @media (max-width: 600px){
       :root{
         --col-gap: 18px;
@@ -235,8 +260,8 @@
     const MAX_DISPLAY = 1200;
     const MAX_PER_SUBMIT = 5;
     const COOLDOWN_MS = 4000;
-    const DB_MAX = 100;     // lato client allineato a 100
-    const MAX_INPUT = 100;  // limite input e counter
+    const DB_MAX = 100;
+    const MAX_INPUT = 100;
     const BLOCKLIST = [];
 
     // === DOM ===
