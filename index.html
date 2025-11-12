@@ -124,8 +124,14 @@
       letter-spacing: 0.01em;
       white-space: pre-wrap;
       word-break: break-word;
-      text-align: center; /* centrato */
+      text-align: center;
       overflow: hidden;
+    }
+
+    /* Glifo speciale per "uah!" -> & con font UahUnfontPossibile */
+    .uahGlyph{
+      font-family: "UahUnfontPossibile" !important;
+      font-weight: 400;
     }
 
     /* Input */
@@ -226,8 +232,8 @@
     const MAX_DISPLAY = 1200;
     const MAX_PER_SUBMIT = 5;
     const COOLDOWN_MS = 4000;
-    const DB_MAX = 100;     // <— lato client allineato a 100
-    const MAX_INPUT = 100;  // <— limite input e counter
+    const DB_MAX = 100;     // lato client allineato a 100
+    const MAX_INPUT = 100;  // limite input e counter
     const BLOCKLIST = [];
 
     // === DOM ===
@@ -298,6 +304,25 @@
     }
     input.addEventListener('input', updateCounter);
 
+    // === RENDER: sostituzione "uah!" (case-insensitive) -> & con font UahUnfontPossibile
+    function renderWithUah(container, text){
+      const re = /uah!/gi;
+      let last = 0, m;
+      while ((m = re.exec(text)) !== null) {
+        if (m.index > last) {
+          container.append(document.createTextNode(text.slice(last, m.index)));
+        }
+        const span = document.createElement('span');
+        span.className = 'uahGlyph';
+        span.textContent = '&';
+        container.append(span);
+        last = m.index + m[0].length;
+      }
+      if (last < text.length) {
+        container.append(document.createTextNode(text.slice(last)));
+      }
+    }
+
     // === DATA ===
     let wordsCache = []; // [{id, word, created_at}]
 
@@ -355,7 +380,8 @@
       const el = document.createElement('div');
       el.className = 'block';
       el.style.fontWeight = pickWeightForItem(item);
-      el.textContent = item.word;
+      // Render con sostituzione "uah!" -> &
+      renderWithUah(el, item.word);
       return el;
     }
 
