@@ -168,19 +168,19 @@
       width: 100%;
     }
 
-    /* Textbox contenitore (la "scatola" che include input + counter + bottone) */
+    /* Textbox contenitore */
     .field{
       position: relative;
       width: 100%;
       border: 1px solid rgba(255,255,255,0.35);
       background: rgba(255,255,255,0.08);
       border-radius: 12px;
-      padding: 0; /* padding gestito da input + elementi assoluti */
-      min-height: 56px; /* altezza minima comoda */
+      padding: 0;
+      min-height: 56px;
       display: block;
     }
 
-    /* Input vero e proprio (senza bordo, dentro la field) */
+    /* Input dentro la field */
     input[type="text"]{
       display: block;
       width: 100%;
@@ -190,9 +190,8 @@
       color: #fff;
       font-size: 18px;  /* >=16px evita zoom iOS */
       padding: 16px 18px;
-      /* spazio per counter + bottone + margini interni della field */
       padding-right: calc(var(--btn-w) + var(--ctr-w) + (3 * var(--inner-gap)));
-      border-radius: 12px; /* match con contenitore per iOS highlight */
+      border-radius: 12px;
     }
 
     /* Counter dentro la field */
@@ -210,10 +209,10 @@
     }
     .counter.warn{ color: #ffd966; }
 
-    /* Bottone dentro la field, con gap interno dal bordo destro della textbox */
+    /* Bottone dentro la field */
     .inputBar button{
       position: absolute;
-      right: var(--inner-gap);               /* gap interno rispetto al bordo destro della textbox */
+      right: var(--inner-gap);
       top: var(--inner-gap);
       bottom: var(--inner-gap);
       width: var(--btn-w);
@@ -228,7 +227,7 @@
       white-space: nowrap;
     }
 
-    /* hint assoluta a sinistra (non ruba spazio alla field) */
+    /* hint */
     .hint{
       position: absolute;
       left: var(--bar-pad-x);
@@ -238,7 +237,7 @@
       pointer-events: none;
     }
 
-    /* Mobile: compattiamo e assicuriamo spazio per input */
+    /* Mobile: compatta */
     @media (max-width: 480px){
       :root{
         --bar-pad-x: 12px;
@@ -311,7 +310,47 @@
     const COOLDOWN_MS = 4000;
     const DB_MAX = 100;
     const MAX_INPUT = 100;
-    const BLOCKLIST = [];
+
+    // === BLOCKLIST REMOTA (Supabase Storage) ===
+    const BLOCKLIST_URL = 'https://jndommppkmwrrpmxhfzu.supabase.co/storage/v1/object/public/config/blocklist.txt';
+    const BLOCKLIST_REFRESH_MS = 10 * 60 * 1000; // 10 minuti
+    let BLOCKLIST = [];
+
+    function normalizeForMatch(s){
+      const map = { '0':'o','1':'i','3':'e','4':'a','5':'s','7':'t','8':'b' };
+      return s
+        .toLowerCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .replace(/[0-9]/g, d => map[d] || d)
+        .replace(/[^a-z\s]/g, '')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .replace(/(.)\1{2,}/g, '$1$1');
+    }
+
+    async function loadBlocklist(){
+      try{
+        const res = await fetch(BLOCKLIST_URL, { cache: 'no-store' });
+        if(!res.ok) throw new Error('HTTP ' + res.status);
+        const txt = await res.text();
+        const items = txt.split(/\r?\n/).map(l => l.trim()).filter(l => l && !l.startsWith('#') && !l.startsWith('//'));
+        const norm = [...new Set(items.map(normalizeForMatch).filter(x => x.length >= 3))];
+        BLOCKLIST = norm;
+        localStorage.setItem('blocklist_cache', JSON.stringify({ ts: Date.now(), items: BLOCKLIST }));
+      }catch(e){
+        // fallback a cache locale
+        const c = localStorage.getItem('blocklist_cache');
+        if (c){
+          try { BLOCKLIST = JSON.parse(c).items || []; } catch {}
+        }
+      }
+    }
+
+    function isBlocked(text){
+      const t = normalizeForMatch(text);
+      return BLOCKLIST.some(b => t.includes(b));
+    }
+    // === END BLOCKLIST ===
 
     // === DOM ===
     const grid = document.getElementById('bannerGrid');
@@ -427,14 +466,20 @@
         .map(t => sanitize(t))
         .filter(Boolean)
         .filter(w => !isLink(w))
+        .filter(w => !isBlocked(w))   // <— blocco client
         .slice(0, MAX_PER_SUBMIT)
         .map(ensureTrailingSpace);
 
-      if (!clean.length) return;
+      if (clean.length === 0) {
+        hint.textContent = 'Contenuto non consentito';
+        setTimeout(() => { hint.textContent = ''; }, 1500);
+        return;
+      }
 
       const now = Date.now();
       if (now - lastSubmitAt < COOLDOWN_MS) {
         hint.textContent = 'Aspetta un attimo prima di inviare di nuovo 🙂';
+        setTimeout(() => { hint.textContent = ''; }, 1200);
         return;
       }
       lastSubmitAt = now;
@@ -456,14 +501,15 @@
       const el = document.createElement('div');
       el.className = 'block';
       el.style.fontWeight = pickWeightForItem(item);
-      // Render con sostituzione "uah!" -> &
       renderWithUah(el, item.word);
       return el;
     }
 
     function buildWall(){
       grid.innerHTML = '';
-      const items = wordsCache.slice(0, MAX_DISPLAY);
+      const items = wordsCache
+        .filter(it => !isBlocked(it.word))  // <— nascondi anche in render
+        .slice(0, MAX_DISPLAY);
 
       if (items.length === 0){
         grid.appendChild(makeBlock({ id: 0, word: 'Scrivi qui sotto ' }));
@@ -481,6 +527,8 @@
     document.addEventListener('DOMContentLoaded', async () => {
       input.focus();
       updateCounter();
+      await loadBlocklist();                         // <— carica blocklist prima del primo render
+      setInterval(loadBlocklist, BLOCKLIST_REFRESH_MS); // refresh periodico
       await fetchWordsRemote();
       setInterval(fetchWordsRemote, REFRESH_MS);
     });
@@ -496,7 +544,10 @@
     });
 
     document.addEventListener('visibilitychange', () => {
-      if (!document.hidden) fetchWordsRemote();
+      if (!document.hidden) {
+        loadBlocklist();
+        fetchWordsRemote();
+      }
     });
   </script>
 </body>
