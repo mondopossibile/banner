@@ -268,8 +268,6 @@
       pointer-events: auto;
       position: absolute;
       right: var(--bar-pad-x);
-      /* 12px sopra la linea superiore della barra quando visibile,
-         e 12px dal bordo inferiore quando collassata */
       bottom: calc(env(safe-area-inset-bottom, 0px) + (var(--input-h) * var(--input-visible)) + 12px);
       width: 36px; height: 36px;
       display: flex; align-items: center; justify-content: center;
@@ -411,7 +409,7 @@
 
     function isBlocked(text){
       const t = normalizeForMatch(text);
-      return BLOCKLIST.some(b => t.includes(b));
+      return BLOCKLIST.some(b => t.includes(b)); // match semplice (substring normalizzato)
     }
 
     // === DOM ===
@@ -420,7 +418,7 @@
     const input = document.getElementById('wordInput');
     const hint = document.getElementById('hint');
     const charCountEl = document.getElementById('charCount');
-    const toggleBtn = document.getElementById('collapseToggle');
+    const toggleBtn = document.getElementById('collapseToggle'); // <-- unica dichiarazione
 
     // === DEVICE ID ===
     function getDeviceId(){
@@ -587,7 +585,6 @@
     }
 
     // === TOGGLE BARRA (desktop) ===
-    const toggleBtn = document.getElementById('collapseToggle');
     function setCollapsed(on){
       document.body.classList.toggle('input-collapsed', !!on);
       const expanded = !on;
