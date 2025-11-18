@@ -13,6 +13,7 @@
       --top-h: 140px;      /* altezza fascia top */
       --pad-x: 24px;       /* padding orizzontale */
       --max-w: 1100px;     /* larghezza massima testo */
+      --ease: cubic-bezier(.22,.7,.26,1); /* ease morbido senza rimbalzo */
     }
 
     /* Bebas Neue (self-hosted, come index) */
@@ -71,15 +72,42 @@
       width: 100%;
       max-width: var(--max-w);
       margin: 0 auto;
-      text-align: center;                 /* tutto centrato */
+      text-align: center;
       display: grid;
       gap: clamp(12px, 1.8vw, 22px);
       align-content: start;
     }
 
+    /* Stato iniziale degli elementi (stagger) */
+    .content > *{
+      opacity: 0;
+      transform: translateY(-12px);
+      will-change: opacity, transform;
+    }
+    /* Attiva animazione semplice (senza bounce) con stagger */
+    .content.is-in > *{
+      animation: fadeSlideIn 600ms var(--ease) forwards;
+    }
+    .content.is-in > *:nth-child(1){ animation-delay: 0ms; }
+    .content.is-in > *:nth-child(2){ animation-delay: 90ms; }
+    .content.is-in > *:nth-child(3){ animation-delay: 180ms; }
+    .content.is-in > *:nth-child(4){ animation-delay: 270ms; }
+    .content.is-in > *:nth-child(5){ animation-delay: 360ms; }
+    .content.is-in > *:nth-child(6){ animation-delay: 450ms; }
+    .content.is-in > *:nth-child(7){ animation-delay: 540ms; }
+
+    @keyframes fadeSlideIn{
+      from { opacity: 0; transform: translateY(-12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (prefers-reduced-motion: reduce){
+      .content > *{ opacity: 1 !important; transform: none !important; animation: none !important; }
+    }
+
     h1{
       margin: 0 0 clamp(12px, 2vw, 18px);
-      font-weight: 400;                   /* niente bold: leggibile con Bebas */
+      font-weight: 400;                   /* niente bold */
       font-size: clamp(28px, 5vw, 50px);
       letter-spacing: .02em;
     }
@@ -88,7 +116,7 @@
       margin: 0;
       font-weight: 400;                   /* Bebas Neue Regular */
       font-size: clamp(20px, 3.6vw, 40px);
-      line-height: 1.08;                  /* leggibile con Bebas */
+      line-height: 1.08;
       letter-spacing: .02em;
       white-space: pre-wrap;
     }
@@ -96,7 +124,7 @@
     /* Evidenziazione: stesso spessore, solo colore accent */
     .strong{
       color: var(--accent);
-      font-weight: 400;                   /* niente bold */
+      font-weight: 400;
     }
 
     .cta{
@@ -129,7 +157,7 @@
   <div class="topBar">un futuro è possibile quando...</div>
 
   <main>
-    <div class="content">
+    <div class="content" id="content">
       <h1><span class="strong">puntiamo al disastro.</span></h1>
 
       <p>Un Disastro rigenerativo.
@@ -148,5 +176,12 @@ Significa affermare che l’arte non è un prodotto,
     </div>
   </main>
 
+  <script>
+    // Attiva lo stagger all’avvio
+    document.addEventListener('DOMContentLoaded', () => {
+      const el = document.getElementById('content');
+      requestAnimationFrame(() => el.classList.add('is-in'));
+    });
+  </script>
 </body>
 </html>
