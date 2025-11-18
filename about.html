@@ -3,13 +3,13 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Manifesto — Un Futuro è Possibile</title>
+  <title>About</title>
 
   <style>
     :root{
       --bg: #8b00a3;
       --fg: #ffffff;
-      --accent: #d7e046;   /* colore top bar */
+      --accent: #d7e046;   /* colore top bar e highlight */
       --top-h: 140px;      /* altezza fascia top */
       --pad-x: 24px;       /* padding orizzontale */
       --max-w: 1100px;     /* larghezza massima testo */
@@ -20,11 +20,6 @@
       font-family: "BebasNeue";
       src: url("./fonts/BebasNeue-Regular.woff") format("woff");
       font-weight: 400; font-style: normal; font-display: swap;
-    }
-    @font-face{
-      font-family: "BebasNeue";
-      src: url("./fonts/BebasNeue-Bold.woff") format("woff");
-      font-weight: 700; font-style: normal; font-display: swap;
     }
 
     /* Font top bar (come index) */
@@ -84,7 +79,7 @@
 
     h1{
       margin: 0 0 clamp(12px, 2vw, 18px);
-      font-weight: 700;
+      font-weight: 400;                   /* niente bold: leggibile con Bebas */
       font-size: clamp(28px, 5vw, 50px);
       letter-spacing: .02em;
     }
@@ -98,7 +93,11 @@
       white-space: pre-wrap;
     }
 
-    .strong{ font-weight: 700; }          /* Bebas Neue Bold */
+    /* Evidenziazione: stesso spessore, solo colore accent */
+    .strong{
+      color: var(--accent);
+      font-weight: 400;                   /* niente bold */
+    }
 
     .cta{
       margin: clamp(24px, 5vw, 48px) auto 0;
