@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Manifesto — Un Futuro è Possibile</title>
+
+  <style>
+    :root{
+      --bg: #8b00a3;
+      --fg: #ffffff;
+      --accent: #d7e046;   /* colore top bar */
+      --top-h: 140px;      /* altezza fascia top */
+      --pad-x: 24px;       /* padding orizzontale */
+      --max-w: 1100px;     /* larghezza massima testo */
+    }
+
+    /* Bebas Neue (self-hosted, come index) */
+    @font-face{
+      font-family: "BebasNeue";
+      src: url("./fonts/BebasNeue-Regular.woff") format("woff");
+      font-weight: 400; font-style: normal; font-display: swap;
+    }
+    @font-face{
+      font-family: "BebasNeue";
+      src: url("./fonts/BebasNeue-Bold.woff") format("woff");
+      font-weight: 700; font-style: normal; font-display: swap;
+    }
+
+    /* Font top bar (come index) */
+    @font-face{
+      font-family: "UahUnfontPossibile";
+      src: url("./fonts/Uah_unfontpossibile-Regular.woff2") format("woff2"),
+           url("./fonts/Uah_unfontpossibile-Regular.ttf") format("truetype");
+      font-weight: 400; font-style: normal; font-display: swap;
+    }
+
+    *{ box-sizing: border-box; }
+    html, body { height: 100%; }
+    body{
+      margin: 0;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: "BebasNeue", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Helvetica, Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Top bar (uguale a index) */
+    .topBar {
+      position: fixed;
+      left: 0; right: 0; top: 0;
+      height: calc(var(--top-h) + env(safe-area-inset-top, 0px));
+      padding: calc(8px + env(safe-area-inset-top, 0px)) var(--pad-x) 8px var(--pad-x);
+      z-index: 30;
+      background: var(--bg);
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      font-family: "UahUnfontPossibile", "BebasNeue", sans-serif;
+      font-size: clamp(32px, 6.5vw, 70px);
+      line-height: 1;
+      letter-spacing: .02em;
+    }
+
+    main{
+      padding: calc(var(--top-h) + 28px) var(--pad-x) calc(40px + env(safe-area-inset-bottom, 0px)) var(--pad-x);
+      min-height: 100dvh;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+    }
+
+    .content{
+      width: 100%;
+      max-width: var(--max-w);
+      margin: 0 auto;
+      text-align: center;                 /* tutto centrato */
+      display: grid;
+      gap: clamp(12px, 1.8vw, 22px);
+      align-content: start;
+    }
+
+    h1{
+      margin: 0 0 clamp(12px, 2vw, 18px);
+      font-weight: 700;
+      font-size: clamp(28px, 5vw, 50px);
+      letter-spacing: .02em;
+    }
+
+    p{
+      margin: 0;
+      font-weight: 400;                   /* Bebas Neue Regular */
+      font-size: clamp(20px, 3.6vw, 40px);
+      line-height: 1.08;                  /* leggibile con Bebas */
+      letter-spacing: .02em;
+      white-space: pre-wrap;
+    }
+
+    .strong{ font-weight: 700; }          /* Bebas Neue Bold */
+
+    .cta{
+      margin: clamp(24px, 5vw, 48px) auto 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 14px 20px;
+      border: 1px solid rgba(255,255,255,0.8);
+      color: #fff;
+      background: transparent;
+      border-radius: 12px;
+      text-decoration: none;
+      font-size: clamp(18px, 2.8vw, 22px);
+      font-weight: 700;
+      transition: background .2s ease, transform .04s ease;
+    }
+    .cta:hover{ background: rgba(255,255,255,0.1); }
+    .cta:active{ transform: translateY(1px); }
+
+    @media (max-width: 600px){
+      :root{ --top-h: 96px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top bar identica a index -->
+  <div class="topBar">un futuro è possibile quando...</div>
+
+  <main>
+    <div class="content">
+      <h1><span class="strong">puntiamo al disastro.</span></h1>
+
+      <p>Un Disastro rigenerativo.
+Il momento in cui una struttura crolla e lascia spazio a ciò che ancora non è.</p>
+
+      <p>Puntare al disastro significa scegliere la vulnerabilità come metodo.
+Significa affermare che l’arte non è un prodotto,
+<span class="strong">ma un processo che non smette mai di evolversi.</span></p>
+
+      <p>È responsabilità collettiva di pensiero, di azioni e pratiche che costruiscono nuove possibilità di relazione,
+<span class="strong">tra le cose, tra le persone.</span></p>
+
+      <p>Puntare al disastro vuol dire <span class="strong">rosicchiare il buio</span>, vuol dire mettersi in una posizione scomoda, vuol dire non poter più usare la vista e affidarsi ai sensi meno sviluppati. L’artista deve imparare ad <span class="strong">essere ratto, ad abitare quel buio,</span> dove la conoscenza non passa più attraverso l’occhio ma attraverso <span class="strong">l’ascolto, il tatto, l’intuizione, la presenza.</span></p>
+
+      <a class="cta" href="index.html">Torna al banner</a>
+    </div>
+  </main>
+
+</body>
+</html>
