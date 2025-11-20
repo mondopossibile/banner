@@ -48,13 +48,14 @@
 
     * { box-sizing: border-box; }
     html, body { height: 100%; }
+    html, body { overflow-x: hidden; }     /* blocca scroll orizzontale globale */
     body{
       margin: 0;
       background: var(--bg);
       color: var(--fg);
       font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Helvetica, sans-serif;
       min-height: 100dvh;
-      overflow: hidden; /* scroll solo nel banner */
+      overflow: hidden; /* scroll solo nel banner (verticale) */
       -webkit-text-size-adjust: 100%;
       text-size-adjust: 100%;
     }
@@ -78,6 +79,7 @@
       font-size: 70px; /* desktop */
       line-height: 1;
       letter-spacing: .02em;
+      max-width: 100vw;                 /* sicurezza */
     }
 
     /* Banner: altezza dipende dalla visibilità della input bar (desktop) */
@@ -98,6 +100,7 @@
       display: grid;
       grid-template-rows: 1fr;
       transition: height .25s ease;
+      max-width: 100vw;                 /* sicurezza */
     }
 
     /* SOLO Bebas nel banner */
@@ -106,7 +109,7 @@
       font-synthesis: none;
     }
 
-    /* Colonne + scroll sull'inner */
+    /* Colonne + scroll sull'inner (desktop) */
     .banner__inner{
       height: 100%;
       padding: 16px 16px;
@@ -119,12 +122,14 @@
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
       overscroll-behavior: contain;
+      touch-action: pan-y;               /* limita gesture a verticale */
 
       scrollbar-width: thin;
       scrollbar-color: rgba(255,255,255,.35) transparent;
 
       opacity: 0;
       transition: opacity .2s ease;
+      max-width: 100vw;                  /* sicurezza */
     }
     .banner__inner::-webkit-scrollbar{ width: 10px; }
     .banner__inner::-webkit-scrollbar-thumb{ background: rgba(255,255,255,.35); border-radius: 8px; }
@@ -141,8 +146,10 @@
       letter-spacing: 0.01em;
       white-space: pre-wrap;
       word-break: break-word;
+      overflow-wrap: anywhere;           /* spezza anche parole lunghissime */
       text-align: center;
       overflow: hidden;
+      max-width: 100%;
     }
 
     /* Glifo speciale per "uah!" -> & con font UahUnfontPossibile */
@@ -161,6 +168,7 @@
       left: 0; right: 0; bottom: 0;
       z-index: 20;
       pointer-events: none;
+      max-width: 100vw;                  /* sicurezza */
     }
 
     /* Input bar */
@@ -177,6 +185,7 @@
       color: var(--muted);
       transform: translateY(0%);
       transition: transform .25s ease;
+      max-width: 100vw;                  /* sicurezza */
     }
 
     /* Stato collassato (desktop) */
@@ -305,13 +314,7 @@
     .infoToggle:hover{ background: rgba(255,255,255,0.12); }
     .infoToggle:active{ transform: translateY(1px); }
 
-    /* nascondi handle freccia su mobile; il ? resta visibile */
-    @media (max-width: 600px){
-      .collapseToggle{ display: none; }
-      :root{ --input-visible: 1; } /* sempre visibile su mobile */
-    }
-
-    /* Mobile: compatta */
+    /* Mobile: compatta e forza layout VERTICALE */
     @media (max-width: 480px){
       :root{
         --bar-pad-x: 12px;
@@ -327,7 +330,7 @@
       .field{ min-height: 50px; }
     }
 
-    /* Mobile layout */
+    /* Mobile layout (≤600px): disattiva colonne e usa flex verticale */
     @media (max-width: 600px){
       :root{
         --col-gap: 18px;
@@ -336,13 +339,24 @@
         --top-h: 96px;
       }
       .banner__inner{
-        column-count: 1;
-        -webkit-column-count: 1;
-        -moz-column-count: 1;
+        column-count: initial !important;
+        -webkit-column-count: initial !important;
+        -moz-column-count: initial !important;
+        display: flex !important;
+        flex-direction: column;
+        align-items: stretch;
+        gap: var(--row-gap);
+        overflow-x: hidden;
+        touch-action: pan-y;
       }
-      .topBar{
-        font-size: 32px;
+      .block{
+        overflow-wrap: anywhere;
+        word-break: normal;  /* già coperto da overflow-wrap */
+        max-width: 100%;
       }
+      .topBar{ font-size: 32px; }
+      .collapseToggle{ display: none; }
+      :root{ --input-visible: 1; } /* barra sempre visibile su mobile */
     }
   </style>
 </head>
