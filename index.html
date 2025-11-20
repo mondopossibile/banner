@@ -13,9 +13,9 @@
 
   <style>
     :root{
-      --top-h: 140px;
-      --input-h: 100px;
-      --input-visible: 1;
+      --top-h: 140px;               /* altezza fascia top */
+      --input-h: 100px;             /* altezza barra input */
+      --input-visible: 1;           /* 1 visibile, 0 collassata (desktop) */
       --bg: #8b00a3;
       --fg: #ffffff;
       --muted: #f1d9f6;
@@ -23,20 +23,22 @@
       --fs: clamp(56px, 10vh, 160px);
       --row-gap: 14px;
 
+      /* Barra input vars */
       --bar-pad-x: 16px;
       --bar-pad-y: 12px;
-      --btn-w: 96px;
-      --ctr-w: 64px;
-      --inner-gap: 10px;
-      --gap: 8px;
+      --btn-w: 96px;     /* larghezza bottone desktop */
+      --ctr-w: 64px;     /* larghezza area counter */
+      --inner-gap: 10px; /* padding interno destro/sinistro dentro la textbox */
+      --gap: 8px;        /* spazi interni vari */
     }
 
-    /* Font (self-hosted) */
+    /* SELF-HOSTED BEBAS NEUE */
     @font-face{ font-family: "BebasNeue"; src: url("./fonts/BebasNeue-Light.woff") format("woff");   font-weight: 300; font-style: normal; font-display: swap; }
-    @font-face{ font-family: "BebasNeue"; src: url("./fonts/BebasNeue-Book.woff")  format("woff");   font-weight: 400; font-style: normal; font-display: swap; }
+    @font-face{ font-family: "BebasNeue"; src: url("./fonts/BebasNeue-Book.woff") format("woff");    font-weight: 400; font-style: normal; font-display: swap; }
     @font-face{ font-family: "BebasNeue"; src: url("./fonts/BebasNeue-Regular.woff") format("woff"); font-weight: 500; font-style: normal; font-display: swap; }
-    @font-face{ font-family: "BebasNeue"; src: url("./fonts/BebasNeue-Bold.woff")   format("woff");  font-weight: 700; font-style: normal; font-display: swap; }
+    @font-face{ font-family: "BebasNeue"; src: url("./fonts/BebasNeue-Bold.woff") format("woff");    font-weight: 700; font-style: normal; font-display: swap; }
 
+    /* FONT TOP BAR (locale) */
     @font-face{
       font-family: "UahUnfontPossibile";
       src: url("./fonts/Uah_unfontpossibile-Regular.woff2") format("woff2"),
@@ -46,7 +48,6 @@
 
     * { box-sizing: border-box; }
     html, body { height: 100%; }
-    html, body { overflow-x: hidden; }
     body{
       margin: 0;
       background: var(--bg);
@@ -60,22 +61,29 @@
 
     /* TOP BAR */
     .topBar {
-      position: fixed; left: 0; right: 0; top: 0;
+      position: fixed;
+      left: 0;
+      right: 0;
+      top: 0;
       height: calc(var(--top-h) + env(safe-area-inset-top, 0px));
       padding: calc(8px + env(safe-area-inset-top, 0px)) 16px 8px 16px;
       z-index: 30;
       background: var(--bg);
       color: #d7e046;
-      display: flex; align-items: center; justify-content: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       text-align: center;
       font-family: "UahUnfontPossibile";
-      font-size: 70px; line-height: 1; letter-spacing: .02em;
-      max-width: 100vw;
+      font-size: 70px; /* desktop */
+      line-height: 1;
+      letter-spacing: .02em;
     }
 
-    /* BANNER */
+    /* Banner: altezza dipende dalla visibilità della input bar (desktop) */
     .banner{
-      position: fixed; left: 0; right: 0;
+      position: fixed;
+      left: 0; right: 0;
       top: calc(var(--top-h) + env(safe-area-inset-top, 0px));
       height: calc(
         100dvh
@@ -86,139 +94,255 @@
       );
       z-index: 10;
       background: var(--bg);
-      display: grid; grid-template-rows: 1fr;
+      border: 0;
+      display: grid;
+      grid-template-rows: 1fr;
       transition: height .25s ease;
-      max-width: 100vw;
     }
 
-    .banner, .banner *{ font-family: "BebasNeue" !important; font-synthesis: none; }
+    /* SOLO Bebas nel banner */
+    .banner, .banner *{
+      font-family: "BebasNeue" !important;
+      font-synthesis: none;
+    }
 
-    /* Desktop: columns */
+    /* Colonne + scroll sull'inner */
     .banner__inner{
       height: 100%;
       padding: 16px 16px;
       column-gap: var(--col-gap);
       column-fill: auto;
-      column-count: 3;
-      -webkit-column-count: 3; -moz-column-count: 3;
+      column-count: 3; /* desktop */
+      -webkit-column-count: 3;
+      -moz-column-count: 3;
 
-      overflow-y: auto; -webkit-overflow-scrolling: touch;
-      overscroll-behavior: contain; touch-action: pan-y;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
 
-      scrollbar-width: thin; scrollbar-color: rgba(255,255,255,.35) transparent;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255,255,255,.35) transparent;
 
-      opacity: 1; /* sempre visibile */
+      opacity: 0;
       transition: opacity .2s ease;
-      max-width: 100vw;
     }
     .banner__inner::-webkit-scrollbar{ width: 10px; }
     .banner__inner::-webkit-scrollbar-thumb{ background: rgba(255,255,255,.35); border-radius: 8px; }
     .banner__inner::-webkit-scrollbar-track{ background: transparent; }
 
+    /* Ogni stringa = riga, centrata */
     .block{
-      display: block; break-inside: avoid;
-      margin: 0 0 var(--row-gap) 0; color: var(--fg);
-      font-size: var(--fs); line-height: 1; letter-spacing: 0.01em;
-      white-space: pre-wrap; word-break: break-word; overflow-wrap: anywhere;
-      text-align: center; overflow: hidden; max-width: 100%;
+      display: block;
+      break-inside: avoid;
+      margin: 0 0 var(--row-gap) 0;
+      color: var(--fg);
+      font-size: var(--fs);
+      line-height: 1;
+      letter-spacing: 0.01em;
+      white-space: pre-wrap;
+      word-break: break-word;
+      text-align: center;
+      overflow: hidden;
     }
 
+    /* Glifo speciale per "uah!" -> & con font UahUnfontPossibile */
     .uahGlyph{
       font-family: "UahUnfontPossibile" !important;
-      font-weight: 400; font-size: 2em; line-height: 0.9;
-      display: inline-block; vertical-align: -0.05em;
+      font-weight: 400;
+      font-size: 2em;
+      line-height: 0.9;
+      display: inline-block;
+      vertical-align: -0.05em;
     }
 
-    /* INPUT DOCK */
+    /* Dock input (contiene barra + handle) */
     .inputDock{
-      position: fixed; left: 0; right: 0; bottom: 0;
-      z-index: 20; pointer-events: none; max-width: 100vw;
+      position: fixed;
+      left: 0; right: 0; bottom: 0;
+      z-index: 20;
+      pointer-events: none;
     }
-    .inputBar{
-      pointer-events: auto; position: absolute; left: 0; right: 0; bottom: 0;
-      height: calc(var(--input-h) + env(safe-area-inset-bottom, 0px));
-      background: var(--bg); border-top: 1px solid rgba(255,255,255,0.25);
-      display: flex; align-items: center;
-      padding: var(--bar-pad-y) var(--bar-pad-x) calc(var(--bar-pad-y) + env(safe-area-inset-bottom, 0px)) var(--bar-pad-x);
-      color: var(--muted); transform: translateY(0%); transition: transform .25s ease; max-width: 100vw;
-    }
-    body.input-collapsed { --input-visible: 0; }
-    body.input-collapsed .inputBar{ transform: translateY(100%); pointer-events: none; }
 
-    .inputBar > form{ position: relative; flex: 1 1 auto; min-width: 0; width: 100%; pointer-events: auto; }
-    .field{
-      position: relative; width: 100%;
-      border: 1px solid rgba(255,255,255,0.35); background: rgba(255,255,255,0.08);
-      border-radius: 12px; padding: 0; min-height: 56px; display: block;
+    /* Input bar */
+    .inputBar{
+      pointer-events: auto;
+      position: absolute;
+      left: 0; right: 0; bottom: 0;
+      height: calc(var(--input-h) + env(safe-area-inset-bottom, 0px));
+      background: var(--bg);
+      border-top: 1px solid rgba(255,255,255,0.25);
+      display: flex;
+      align-items: center;
+      padding: var(--bar-pad-y) var(--bar-pad-x) calc(var(--bar-pad-y) + env(safe-area-inset-bottom, 0px)) var(--bar-pad-x);
+      color: var(--muted);
+      transform: translateY(0%);
+      transition: transform .25s ease;
     }
+
+    /* Stato collassato (desktop) */
+    body.input-collapsed { --input-visible: 0; }
+    body.input-collapsed .inputBar{
+      transform: translateY(100%);
+      pointer-events: none;
+    }
+
+    .inputBar > form{
+      position: relative;
+      flex: 1 1 auto;
+      min-width: 0;
+      width: 100%;
+      pointer-events: auto;
+    }
+
+    /* Textbox contenitore */
+    .field{
+      position: relative;
+      width: 100%;
+      border: 1px solid rgba(255,255,255,0.35);
+      background: rgba(255,255,255,0.08);
+      border-radius: 12px;
+      padding: 0;
+      min-height: 56px;
+      display: block;
+    }
+
+    /* Input dentro la field */
     input[type="text"]{
-      display: block; width: 100%; border: 0; outline: none; background: transparent; color: #fff;
-      font-size: 18px; padding: 16px 18px; padding-right: calc(var(--btn-w) + var(--ctr-w) + (3 * var(--inner-gap)));
+      display: block;
+      width: 100%;
+      border: 0;
+      outline: none;
+      background: transparent;
+      color: #fff;
+      font-size: 18px;  /* >=16px evita zoom iOS */
+      padding: 16px 18px;
+      padding-right: calc(var(--btn-w) + var(--ctr-w) + (3 * var(--inner-gap)));
       border-radius: 12px;
     }
+
+    /* Counter dentro la field */
     .counter{
-      position: absolute; right: calc(var(--btn-w) + (2 * var(--inner-gap)));
-      top: 50%; transform: translateY(-50%); width: var(--ctr-w);
-      text-align: right; color: var(--muted); font-size: 12px; white-space: nowrap; pointer-events: none;
+      position: absolute;
+      right: calc(var(--btn-w) + (2 * var(--inner-gap)));
+      top: 50%;
+      transform: translateY(-50%);
+      width: var(--ctr-w);
+      text-align: right;
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+      pointer-events: none;
     }
     .counter.warn{ color: #ffd966; }
+
+    /* Bottone dentro la field */
     .inputBar button{
-      position: absolute; right: var(--inner-gap); top: var(--inner-gap); bottom: var(--inner-gap);
-      width: var(--btn-w); padding: 0 12px; border-radius: 10px; cursor: pointer;
-      border: 1px solid rgba(255,255,255,0.8); background: transparent; color: #fff;
-      font-weight: 800; font-size: 16px; white-space: nowrap;
-    }
-    .hint{ position: absolute; left: var(--bar-pad-x);
-      bottom: calc(var(--bar-pad-y) + env(safe-area-inset-bottom, 0px));
-      font-size: 12px; color: var(--muted); pointer-events: none;
+      position: absolute;
+      right: var(--inner-gap);
+      top: var(--inner-gap);
+      bottom: var(--inner-gap);
+      width: var(--btn-w);
+      padding: 0 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      border: 1px solid rgba(255,255,255,0.8);
+      background: transparent;
+      color: #fff;
+      font-weight: 800;
+      font-size: 16px;
+      white-space: nowrap;
     }
 
-    /* Toggle collapse (desktop) */
+    /* hint */
+    .hint{
+      position: absolute;
+      left: var(--bar-pad-x);
+      bottom: calc(var(--bar-pad-y) + env(safe-area-inset-bottom, 0px));
+      font-size: 12px;
+      color: var(--muted);
+      pointer-events: none;
+    }
+
+    /* Handle freccia (pulito, sopra la barra, allineato a destra) */
     .collapseToggle{
-      pointer-events: auto; position: absolute; right: var(--bar-pad-x);
+      pointer-events: auto;
+      position: absolute;
+      right: var(--bar-pad-x);
       bottom: calc(env(safe-area-inset-bottom, 0px) + (var(--input-h) * var(--input-visible)) + 12px);
-      width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
-      border-radius: 999px; border: 1px solid rgba(255,255,255,0.6);
-      background: rgba(255,255,255,0.06); color: #fff; cursor: pointer;
-      transition: transform .2s ease, background .2s ease, opacity .2s ease, bottom .25s ease; z-index: 25;
+      width: 36px; height: 36px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.6);
+      background: rgba(255,255,255,0.06);
+      color: #fff;
+      cursor: pointer;
+      transition: transform .2s ease, background .2s ease, opacity .2s ease, bottom .25s ease;
+      z-index: 25;
     }
     .collapseToggle:hover{ background: rgba(255,255,255,0.12); }
     .collapseToggle svg{ width: 18px; height: 18px; transition: transform .2s ease; }
     body.input-collapsed .collapseToggle svg{ transform: rotate(180deg); }
 
-    /* Info ? */
+    /* Pulsante info (?) — segue la barra, allineato a sinistra, visibile anche su mobile */
     .infoToggle{
-      pointer-events: auto; position: absolute; left: var(--bar-pad-x);
+      pointer-events: auto;
+      position: absolute;
+      left: var(--bar-pad-x);
       bottom: calc(env(safe-area-inset-bottom, 0px) + (var(--input-h) * var(--input-visible)) + 12px);
-      width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
-      border-radius: 999px; border: 1px solid rgba(255,255,255,0.6);
-      background: rgba(255,255,255,0.06); color: #fff; font-weight: 800; font-size: 18px;
-      text-decoration: none; cursor: pointer;
-      transition: transform .2s ease, background .2s ease, opacity .2s ease, bottom .25s ease; z-index: 25;
+      width: 36px; height: 36px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.6);
+      background: rgba(255,255,255,0.06);
+      color: #fff;
+      font-weight: 800;
+      font-size: 18px;
+      text-decoration: none;
+      cursor: pointer;
+      transition: transform .2s ease, background .2s ease, opacity .2s ease, bottom .25s ease;
+      z-index: 25;
     }
     .infoToggle:hover{ background: rgba(255,255,255,0.12); }
     .infoToggle:active{ transform: translateY(1px); }
 
-    /* Mobile: compatta e forza layout VERTICALE */
+    /* nascondi handle freccia su mobile; il ? resta visibile */
+    @media (max-width: 600px){
+      .collapseToggle{ display: none; }
+      :root{ --input-visible: 1; } /* sempre visibile su mobile */
+    }
+
+    /* Mobile: compatta */
     @media (max-width: 480px){
-      :root{ --bar-pad-x: 12px; --bar-pad-y: 10px; --btn-w: 82px; --ctr-w: 52px; --inner-gap: 8px; --gap: 6px; }
+      :root{
+        --bar-pad-x: 12px;
+        --bar-pad-y: 10px;
+        --btn-w: 82px;
+        --ctr-w: 52px;
+        --inner-gap: 8px;
+        --gap: 6px;
+      }
       input[type="text"]{ padding: 12px 12px; font-size: 16px; }
       .inputBar button{ font-size: 15px; }
       .hint{ display: none; }
       .field{ min-height: 50px; }
     }
 
+    /* Mobile layout */
     @media (max-width: 600px){
-      :root{ --col-gap: 18px; --row-gap: 10px; --fs: clamp(44px, 9.5vh, 120px); --top-h: 96px; }
-      .banner__inner{
-        column-count: initial !important; -webkit-column-count: initial !important; -moz-column-count: initial !important;
-        display: flex !important; flex-direction: column; align-items: stretch; gap: var(--row-gap);
-        overflow-x: hidden; touch-action: pan-y; opacity: 1 !important;
+      :root{
+        --col-gap: 18px;
+        --row-gap: 10px;
+        --fs: clamp(44px, 9.5vh, 120px);
+        --top-h: 96px;
       }
-      .block{ overflow-wrap: anywhere; word-break: normal; max-width: 100%; }
-      .topBar{ font-size: 32px; }
-      .collapseToggle{ display: none; }
-      :root{ --input-visible: 1; }
+      .banner__inner{
+        column-count: 1;
+        -webkit-column-count: 1;
+        -moz-column-count: 1;
+      }
+      .topBar{
+        font-size: 32px;
+      }
     }
   </style>
 </head>
@@ -247,12 +371,13 @@
 
     <!-- Freccia toggle (solo desktop via CSS) -->
     <button class="collapseToggle" id="collapseToggle" aria-expanded="true" aria-label="Nascondi barra">
+      <!-- caret down -->
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <path fill="currentColor" d="M7 10l5 5 5-5z"/>
       </svg>
     </button>
 
-    <!-- Pulsante “?” a sinistra -->
+    <!-- Nuovo pulsante “?” a sinistra, visibile anche su mobile -->
     <a class="infoToggle" id="infoToggle" href="about.html" aria-label="Vai alla pagina About" title="About">?</a>
   </div>
 
@@ -265,20 +390,28 @@
     const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     // === PARAMS ===
-    const REFRESH_MS = 30000, MAX_FETCH = 1200, MAX_DISPLAY = 1200, MAX_PER_SUBMIT = 5, COOLDOWN_MS = 4000, DB_MAX = 100, MAX_INPUT = 100;
+    const REFRESH_MS = 30000;
+    const MAX_FETCH = 1200;
+    const MAX_DISPLAY = 1200;
+    const MAX_PER_SUBMIT = 5;
+    const COOLDOWN_MS = 4000;
+    const DB_MAX = 100;
+    const MAX_INPUT = 100;
 
-    // === BLOCKLIST REMOTA (Storage) ===
+    // === BLOCKLIST REMOTA (Supabase Storage) ===
     const BLOCKLIST_URL = 'https://jndommppkmwrrpmxhfzu.supabase.co/storage/v1/object/public/config/blocklist.txt';
-    const BLOCKLIST_REFRESH_MS = 10 * 60 * 1000;
+    const BLOCKLIST_REFRESH_MS = 10 * 60 * 1000; // 10 minuti
     let BLOCKLIST = [];
-
-    // Cache locale parole per startup veloce
-    const WORDS_CACHE_KEY = 'words_cache_v1';
 
     function normalizeForMatch(s){
       const map = { '0':'o','1':'i','3':'e','4':'a','5':'s','7':'t','8':'b' };
-      return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-        .replace(/[0-9]/g, d => map[d] || d).replace(/[^a-z\s]/g, '').replace(/\s+/g, ' ').trim()
+      return s
+        .toLowerCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .replace(/[0-9]/g, d => map[d] || d)
+        .replace(/[^a-z\s]/g, '')
+        .replace(/\s+/g, ' ')
+        .trim()
         .replace(/(.)\1{2,}/g, '$1$1');
     }
 
@@ -288,17 +421,20 @@
         if(!res.ok) throw new Error('HTTP ' + res.status);
         const txt = await res.text();
         const items = txt.split(/\r?\n/).map(l => l.trim()).filter(l => l && !l.startsWith('#') && !l.startsWith('//'));
-        BLOCKLIST = [...new Set(items.map(normalizeForMatch).filter(x => x.length >= 3))];
+        const norm = [...new Set(items.map(normalizeForMatch).filter(x => x.length >= 3))];
+        BLOCKLIST = norm;
         localStorage.setItem('blocklist_cache', JSON.stringify({ ts: Date.now(), items: BLOCKLIST }));
       }catch(e){
         const c = localStorage.getItem('blocklist_cache');
-        if (c){ try { BLOCKLIST = JSON.parse(c).items || []; } catch{} }
+        if (c){
+          try { BLOCKLIST = JSON.parse(c).items || []; } catch {}
+        }
       }
     }
 
     function isBlocked(text){
       const t = normalizeForMatch(text);
-      return BLOCKLIST.some(b => t.includes(b));
+      return BLOCKLIST.some(b => t.includes(b)); // match semplice (substring normalizzato)
     }
 
     // === DOM ===
@@ -307,18 +443,23 @@
     const input = document.getElementById('wordInput');
     const hint = document.getElementById('hint');
     const charCountEl = document.getElementById('charCount');
-    const toggleBtn = document.getElementById('collapseToggle');
+    const toggleBtn = document.getElementById('collapseToggle'); // <-- unica dichiarazione
 
     // === DEVICE ID ===
     function getDeviceId(){
       try {
         let id = localStorage.getItem('device_id');
         if (!id) {
-          id = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2);
+          id = crypto.randomUUID ? crypto.randomUUID() :
+            ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
+              (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+            );
           localStorage.setItem('device_id', id);
         }
         return id;
-      } catch { return Math.random().toString(36).slice(2); }
+      } catch {
+        return '00000000-0000-4000-8000-' + Math.random().toString(16).slice(2, 14);
+      }
     }
     const DEVICE_ID = getDeviceId();
 
@@ -328,8 +469,13 @@
     const sanitize = s => s.replace(/[<>"&]/g, ch => escapeMap[ch]);
     const isLink = s => /(https?:\/\/|www\.)/i.test(s);
 
-    const tokenize = raw => raw.split(/(?:,|\n)+/).map(s => s).filter(s => s.replace(/\s/g,'').length > 0);
+    // Split per virgola/newline, preserva spazi interni/esterni
+    const tokenize = raw => raw
+      .split(/(?:,|\n)+/)
+      .map(s => s)
+      .filter(s => s.replace(/\s/g,'').length > 0);
 
+    // Spazio finale (senza superare limite DB)
     function ensureTrailingSpace(w){
       if (w.endsWith(' ')) return w.slice(0, DB_MAX);
       if (w.length < DB_MAX) return w + ' ';
@@ -337,81 +483,133 @@
     }
 
     const WEIGHTS = [300, 400, 500, 700];
-    function fnv1a(str){ let h=0x811c9dc5; for(let i=0;i<str.length;i++){ h^=str.charCodeAt(i); h=Math.imul(h,0x01000193);} return h>>>0; }
-    function pickWeightForItem(item){ const key = (item.id != null) ? String(item.id) : item.word; return WEIGHTS[fnv1a(key)%WEIGHTS.length]; }
+    function fnv1a(str){
+      let h = 0x811c9dc5;
+      for (let i = 0; i < str.length; i++){
+        h ^= str.charCodeAt(i);
+        h = Math.imul(h, 0x01000193);
+      }
+      return h >>> 0;
+    }
+    function pickWeightForItem(item){
+      const key = (item.id != null) ? String(item.id) : item.word;
+      const idx = fnv1a(key) % WEIGHTS.length;
+      return WEIGHTS[idx];
+    }
 
+    // === COUNTER ===
+    function updateCounter(){
+      const len = input.value.length;
+      charCountEl.textContent = len;
+      const warn = len >= MAX_INPUT * 0.9;
+      charCountEl.parentElement.classList.toggle('warn', warn);
+    }
+    input.addEventListener('input', updateCounter);
+
+    // === RENDER: sostituzione "uah!" (case-insensitive) -> & con font UahUnfontPossibile
     function renderWithUah(container, text){
-      const re = /uah!/gi; let last = 0, m;
+      const re = /uah!/gi;
+      let last = 0, m;
       while ((m = re.exec(text)) !== null) {
-        if (m.index > last) container.append(document.createTextNode(text.slice(last, m.index)));
-        const span = document.createElement('span'); span.className = 'uahGlyph'; span.textContent = '&'; container.append(span);
+        if (m.index > last) {
+          container.append(document.createTextNode(text.slice(last, m.index)));
+        }
+        const span = document.createElement('span');
+        span.className = 'uahGlyph';
+        span.textContent = '&';
+        container.append(span);
         last = m.index + m[0].length;
       }
-      if (last < text.length) container.append(document.createTextNode(text.slice(last)));
+      if (last < text.length) {
+        container.append(document.createTextNode(text.slice(last)));
+      }
     }
 
-    let wordsCache = [];
-
-    function saveWordsCache(arr){
-      try{ localStorage.setItem(WORDS_CACHE_KEY, JSON.stringify(arr)); }catch{}
-    }
-    function loadWordsCache(){
-      try{ const s = localStorage.getItem(WORDS_CACHE_KEY); return s ? JSON.parse(s) : []; }catch{ return []; }
-    }
+    // === DATA ===
+    let wordsCache = []; // [{id, word, created_at}]
 
     async function fetchWordsRemote(){
-      try{
-        const { data, error } = await sb.from('words').select('id, word, created_at').order('created_at', { ascending: false }).limit(MAX_FETCH);
-        if (error) throw error;
-        wordsCache = data || [];
-        saveWordsCache(wordsCache);
-      }catch(e){
-        console.warn('Fetch error:', e.message || e);
-        // fallback: usa cache locale se c'è
-        if (!wordsCache.length){
-          wordsCache = loadWordsCache();
-        }
-      }finally{
-        buildWall();
+      const { data, error } = await sb
+        .from('words')
+        .select('id, word, created_at')
+        .order('created_at', { ascending: false })
+        .limit(MAX_FETCH);
+
+      if (error) {
+        console.warn('Fetch error:', error.message);
+        hint.textContent = 'Connessione instabile, riprovo...';
+        return;
       }
+      hint.textContent = '';
+      wordsCache = data || [];
+      buildWall();
     }
 
     async function insertWordsRemote(tokens){
       if (!tokens.length) return;
-      let clean = tokens.map(t => sanitize(t)).filter(Boolean).filter(w => !isLink(w)).filter(w => !isBlocked(w)).slice(0, MAX_PER_SUBMIT).map(ensureTrailingSpace);
-      if (!clean.length) { hint.textContent = 'Contenuto non consentito'; setTimeout(()=>{ hint.textContent=''; },1500); return; }
-      const now = Date.now(); if (now - lastSubmitAt < COOLDOWN_MS) { hint.textContent = 'Aspetta un attimo 🙂'; setTimeout(()=>{ hint.textContent=''; },1200); return; }
-      lastSubmitAt = now;
-      try{
-        const { data, error } = await sb.from('words').insert(clean.map(w => ({ word:w, device_id: DEVICE_ID }))).select('id, word, created_at');
-        if (error) throw error;
-        (data || []).forEach(r => wordsCache.unshift(r));
-        saveWordsCache(wordsCache);
-      }catch(e){
-        console.error('Insert error:', e.message || e);
-      }finally{
-        buildWall();
-        setTimeout(()=>{ hint.textContent=''; },1200);
+
+      let clean = tokens
+        .map(t => sanitize(t))
+        .filter(Boolean)
+        .filter(w => !isLink(w))
+        .filter(w => !isBlocked(w))   // blocco client
+        .slice(0, MAX_PER_SUBMIT)
+        .map(ensureTrailingSpace);
+
+      if (clean.length === 0) {
+        hint.textContent = 'Contenuto non consentito';
+        setTimeout(() => { hint.textContent = ''; }, 1500);
+        return;
       }
+
+      const now = Date.now();
+      if (now - lastSubmitAt < COOLDOWN_MS) {
+        hint.textContent = 'Aspetta un attimo prima di inviare di nuovo 🙂';
+        setTimeout(() => { hint.textContent = ''; }, 1200);
+        return;
+      }
+      lastSubmitAt = now;
+
+      const payload = clean.map(w => ({ word: w, device_id: DEVICE_ID }));
+      const { data, error } = await sb.from('words').insert(payload).select('id, word, created_at');
+      if (error) {
+        console.error('Insert error:', error.message);
+        hint.textContent = error.message || 'Errore inserimento';
+        return;
+      }
+
+      (data || []).forEach(r => wordsCache.unshift(r));
+      buildWall();
+      setTimeout(() => { hint.textContent = ''; }, 1200);
     }
 
     function makeBlock(item){
-      const el = document.createElement('div'); el.className = 'block';
+      const el = document.createElement('div');
+      el.className = 'block';
       el.style.fontWeight = pickWeightForItem(item);
       renderWithUah(el, item.word);
       return el;
     }
 
     function buildWall(){
-      if (!grid) return;
       grid.innerHTML = '';
-      const items = (wordsCache || []).filter(it => !isBlocked(it.word)).slice(0, MAX_DISPLAY);
-      if (items.length){
-        for (const it of items){ grid.appendChild(makeBlock(it)); }
-      } // niente placeholder
-      grid.style.opacity = '1';
+      const items = wordsCache
+        .filter(it => !isBlocked(it.word))
+        .slice(0, MAX_DISPLAY);
+
+      if (items.length === 0){
+        grid.appendChild(makeBlock({ id: 0, word: 'Scrivi qui sotto ' }));
+      } else {
+        for (const it of items){
+          grid.appendChild(makeBlock(it));
+        }
+      }
+
+      const waits = [300,400,500,700].map(w => document.fonts.load(`${w} 1rem "BebasNeue"`));
+      Promise.all(waits).then(() => { grid.style.opacity = '1'; });
     }
 
+    // === TOGGLE BARRA (desktop) ===
     function setCollapsed(on){
       document.body.classList.toggle('input-collapsed', !!on);
       const expanded = !on;
@@ -423,24 +621,22 @@
       setCollapsed(!isCollapsed);
     });
 
-    function handleResize(){ if (window.matchMedia('(max-width: 600px)').matches){ setCollapsed(false); } }
+    // Se entri in mobile, forza visibile e azzera stato
+    function handleResize(){
+      if (window.matchMedia('(max-width: 600px)').matches){
+        setCollapsed(false);
+      }
+    }
     window.addEventListener('resize', handleResize);
 
+    // Init
     document.addEventListener('DOMContentLoaded', async () => {
-      // 1) mostra subito cache locale se c'è (niente flash)
-      wordsCache = loadWordsCache();
-      buildWall();
-
-      // 2) carica blocklist e dati remoti (con fallback)
-      await loadBlocklist();
-      setInterval(loadBlocklist, BLOCKLIST_REFRESH_MS);
-
-      await fetchWordsRemote();
-      setInterval(fetchWordsRemote, REFRESH_MS);
-
-      // UI
       input.focus();
       updateCounter();
+      await loadBlocklist();
+      setInterval(loadBlocklist, 10 * 60 * 1000);
+      await fetchWordsRemote();
+      setInterval(fetchWordsRemote, REFRESH_MS);
       handleResize();
     });
 
@@ -455,15 +651,11 @@
     });
 
     document.addEventListener('visibilitychange', () => {
-      if (!document.hidden) { loadBlocklist(); fetchWordsRemote(); }
+      if (!document.hidden) {
+        loadBlocklist();
+        fetchWordsRemote();
+      }
     });
-
-    function updateCounter(){
-      const len = input.value.length;
-      document.getElementById('charCount').textContent = len;
-      document.querySelector('.counter').classList.toggle('warn', len >= 90);
-    }
-    input.addEventListener('input', updateCounter);
   </script>
 </body>
 </html>
