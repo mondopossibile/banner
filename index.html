@@ -79,7 +79,7 @@
       font-size: 70px; /* desktop */
       line-height: 1;
       letter-spacing: .02em;
-      max-width: 100vw;                 /* sicurezza */
+      max-width: 100vw;
     }
 
     /* Banner: altezza dipende dalla visibilità della input bar (desktop) */
@@ -100,7 +100,7 @@
       display: grid;
       grid-template-rows: 1fr;
       transition: height .25s ease;
-      max-width: 100vw;                 /* sicurezza */
+      max-width: 100vw;
     }
 
     /* SOLO Bebas nel banner */
@@ -127,9 +127,9 @@
       scrollbar-width: thin;
       scrollbar-color: rgba(255,255,255,.35) transparent;
 
-      opacity: 0;
+      opacity: 0;                        /* verrà sbloccato da JS o da media query mobile */
       transition: opacity .2s ease;
-      max-width: 100vw;                  /* sicurezza */
+      max-width: 100vw;
     }
     .banner__inner::-webkit-scrollbar{ width: 10px; }
     .banner__inner::-webkit-scrollbar-thumb{ background: rgba(255,255,255,.35); border-radius: 8px; }
@@ -146,7 +146,7 @@
       letter-spacing: 0.01em;
       white-space: pre-wrap;
       word-break: break-word;
-      overflow-wrap: anywhere;           /* spezza anche parole lunghissime */
+      overflow-wrap: anywhere;
       text-align: center;
       overflow: hidden;
       max-width: 100%;
@@ -168,7 +168,7 @@
       left: 0; right: 0; bottom: 0;
       z-index: 20;
       pointer-events: none;
-      max-width: 100vw;                  /* sicurezza */
+      max-width: 100vw;
     }
 
     /* Input bar */
@@ -185,7 +185,7 @@
       color: var(--muted);
       transform: translateY(0%);
       transition: transform .25s ease;
-      max-width: 100vw;                  /* sicurezza */
+      max-width: 100vw;
     }
 
     /* Stato collassato (desktop) */
@@ -330,7 +330,7 @@
       .field{ min-height: 50px; }
     }
 
-    /* Mobile layout (≤600px): disattiva colonne e usa flex verticale */
+    /* Mobile layout (≤600px): disattiva colonne e usa flex verticale + forza visibilità */
     @media (max-width: 600px){
       :root{
         --col-gap: 18px;
@@ -348,10 +348,11 @@
         gap: var(--row-gap);
         overflow-x: hidden;
         touch-action: pan-y;
+        opacity: 1 !important;           /* forza visibile su mobile */
       }
       .block{
         overflow-wrap: anywhere;
-        word-break: normal;  /* già coperto da overflow-wrap */
+        word-break: normal;
         max-width: 100%;
       }
       .topBar{ font-size: 32px; }
@@ -385,13 +386,12 @@
 
     <!-- Freccia toggle (solo desktop via CSS) -->
     <button class="collapseToggle" id="collapseToggle" aria-expanded="true" aria-label="Nascondi barra">
-      <!-- caret down -->
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <path fill="currentColor" d="M7 10l5 5 5-5z"/>
       </svg>
     </button>
 
-    <!-- Nuovo pulsante “?” a sinistra, visibile anche su mobile -->
+    <!-- Pulsante “?” a sinistra, visibile anche su mobile -->
     <a class="infoToggle" id="infoToggle" href="about.html" aria-label="Vai alla pagina About" title="About">?</a>
   </div>
 
@@ -457,7 +457,7 @@
     const input = document.getElementById('wordInput');
     const hint = document.getElementById('hint');
     const charCountEl = document.getElementById('charCount');
-    const toggleBtn = document.getElementById('collapseToggle'); // <-- unica dichiarazione
+    const toggleBtn = document.getElementById('collapseToggle');
 
     // === DEVICE ID ===
     function getDeviceId(){
@@ -520,7 +520,7 @@
     }
     input.addEventListener('input', updateCounter);
 
-    // === RENDER: sostituzione "uah!" (case-insensitive) -> & con font UahUnfontPossibile
+    // === RENDER: sostituzione "uah!" -> & con font UahUnfontPossibile
     function renderWithUah(container, text){
       const re = /uah!/gi;
       let last = 0, m;
@@ -619,8 +619,19 @@
         }
       }
 
-      const waits = [300,400,500,700].map(w => document.fonts.load(`${w} 1rem "BebasNeue"`));
-      Promise.all(waits).then(() => { grid.style.opacity = '1'; });
+      // Fallback robusto: mostra comunque il banner anche se fonts non risponde
+      const show = () => { grid.style.opacity = '1'; };
+      try {
+        if (document.fonts && document.fonts.ready) {
+          document.fonts.ready.then(show).catch(show);
+          // fallback extra nel caso non risponda in tempi brevi
+          setTimeout(show, 1000);
+        } else {
+          show();
+        }
+      } catch (e) {
+        show();
+      }
     }
 
     // === TOGGLE BARRA (desktop) ===
